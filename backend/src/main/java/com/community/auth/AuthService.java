@@ -156,7 +156,10 @@ public class AuthService {
         vt.setExpiresAt(Instant.now().plusSeconds(verificationTokenExpiryHours * 3600));
         verificationTokenRepository.save(vt);
 
-        emailService.sendEmailChangeVerification(request.newEmail(), token);
+        boolean sent = emailService.sendEmailChangeVerification(request.newEmail(), token).join();
+        if (!sent) {
+            throw new IllegalArgumentException("Failed to send verification email. Please check your email configuration.");
+        }
     }
 
     @Transactional
@@ -207,7 +210,10 @@ public class AuthService {
         vt.setExpiresAt(Instant.now().plusSeconds(passwordResetTokenExpiryHours * 3600));
         verificationTokenRepository.save(vt);
 
-        emailService.sendPasswordResetEmail(user.getEmail(), token);
+        boolean sent = emailService.sendPasswordResetEmail(user.getEmail(), token).join();
+        if (!sent) {
+            throw new IllegalArgumentException("Failed to send password reset email. Please check your email configuration.");
+        }
     }
 
     @Transactional
@@ -280,7 +286,10 @@ public class AuthService {
         vt.setExpiresAt(Instant.now().plusSeconds(verificationTokenExpiryHours * 3600));
         verificationTokenRepository.save(vt);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        boolean sent = emailService.sendVerificationEmail(user.getEmail(), token).join();
+        if (!sent) {
+            throw new IllegalArgumentException("Failed to send verification email. Please check your email configuration.");
+        }
     }
 
     private String generateToken() {

@@ -1,13 +1,19 @@
 package com.community.email;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
     private final String fromAddress;
@@ -22,7 +28,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendVerificationEmail(String to, String token) {
+    public CompletableFuture<Boolean> sendVerificationEmail(String to, String token) {
         String link = appUrl + "/verify-email?token=" + token;
         String subject = "Verify your email address";
         String body = """
@@ -35,11 +41,12 @@ public class EmailService {
                 If you did not create an account, please ignore this email.
                 """.formatted(link);
 
-        send(to, subject, body);
+        boolean success = send(to, subject, body);
+        return CompletableFuture.completedFuture(success);
     }
 
     @Async
-    public void sendEmailChangeVerification(String to, String token) {
+    public CompletableFuture<Boolean> sendEmailChangeVerification(String to, String token) {
         String link = appUrl + "/verify-email?token=" + token;
         String subject = "Confirm your new email address";
         String body = """
@@ -52,11 +59,12 @@ public class EmailService {
                 If you did not request this change, please ignore this email.
                 """.formatted(link);
 
-        send(to, subject, body);
+        boolean success = send(to, subject, body);
+        return CompletableFuture.completedFuture(success);
     }
 
     @Async
-    public void sendPasswordResetEmail(String to, String token) {
+    public CompletableFuture<Boolean> sendPasswordResetEmail(String to, String token) {
         String link = appUrl + "/reset-password?token=" + token;
         String subject = "Reset your password";
         String body = """
@@ -69,10 +77,11 @@ public class EmailService {
                 If you did not request a password reset, please ignore this email.
                 """.formatted(link);
 
-        send(to, subject, body);
+        boolean success = send(to, subject, body);
+        return CompletableFuture.completedFuture(success);
     }
 
-    private void send(String to, String subject, String body) {
+    private boolean send(String to, String subject, String body) {
         // ALWAYS log the email details to console/logs so it's easy to test and find links
         System.out.println("\n=== [VAYAM EMAIL SENT] ===");
         System.out.println("To: " + to);
@@ -86,10 +95,10 @@ public class EmailService {
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
+            return true;
         } catch (Exception e) {
-            // WHY: Email failures should never break the request.
-            // Log and swallow — the caller already returned a success response.
-            System.err.println("Failed to send email to " + to + ": " + e.getMessage());
+            log.error("Failed to send email to " + to, e);
+            return false;
         }
     }
 }

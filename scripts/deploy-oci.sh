@@ -19,7 +19,7 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker "$(whoami)"
 echo "  Docker installed. Log out and back in if 'docker' needs sudo (newgrp docker)."
 
-REPO_URL="${REPO_URL:-https://github.com/YOUR_ORG/community.git}"
+REPO_URL="${REPO_URL:-https://github.com/vishank020/Vayam.git}"
 echo "==> Cloning repo (set REPO_URL env var if different)..."
 cd /opt
 sudo git clone "$REPO_URL"

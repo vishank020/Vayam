@@ -1,0 +1,18 @@
+# Copy this file to application-local.yml and fill in your values.
+# Copy: cp application-local.yml.example application-local.yml
+# Run with: ./mvnw spring-boot:run -Dspring.profiles.active=local
+#
+# WHY: This file is safe to commit because it contains dummy values.
+# The real application-local.yml is gitignored via .gitignore.
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5434/community_db
+    username: community_user
+    password: community_pass
+
+app:
+  jwt:
+    secret: change-me-to-at-least-256-bits-long-secret-key-1234567890
+  encryption:
+    secret: change-me-to-32-chars-min-for-aes!

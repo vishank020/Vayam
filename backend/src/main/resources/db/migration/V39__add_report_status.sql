@@ -1,0 +1,2 @@
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'OPEN';
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);

@@ -1,0 +1,1 @@
+ALTER TABLE user_settings ADD COLUMN anonymous_browsing BOOLEAN NOT NULL DEFAULT FALSE;

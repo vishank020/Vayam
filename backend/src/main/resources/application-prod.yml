@@ -1,0 +1,14 @@
+server:
+  forward-headers-strategy: framework
+
+spring:
+  jpa:
+    show-sql: false
+    open-in-view: false
+
+cors:
+  allowed-origin: ${CORS_ALLOWED_ORIGIN:https://localhost}
+
+app:
+  cookies:
+    secure: ${COOKIE_SECURE:true}

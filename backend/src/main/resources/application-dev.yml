@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/community_dev
+    username: community_dev
+    password: community_dev_pass
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate

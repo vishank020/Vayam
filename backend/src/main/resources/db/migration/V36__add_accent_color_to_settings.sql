@@ -1,0 +1,1 @@
+ALTER TABLE user_settings ADD COLUMN accent_color VARCHAR(7) DEFAULT '#4a6cf7';

@@ -48,7 +48,7 @@ app:
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     bucket-name: ${MINIO_BUCKET:community}
-    region: us-east-1
+    region: ${MINIO_REGION:us-east-1}
   cookies:
     secure: ${COOKIE_SECURE:false}
   url: ${APP_URL:http://localhost:4200}

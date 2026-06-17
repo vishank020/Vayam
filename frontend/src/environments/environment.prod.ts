@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  apiUrl: 'https://vayam-backend.onrender.com/api',
   wsUrl: 'wss://vayam-backend.onrender.com/ws/websocket'
 };

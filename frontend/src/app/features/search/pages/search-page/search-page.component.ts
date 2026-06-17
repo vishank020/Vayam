@@ -13,18 +13,6 @@ import { AuthService } from '../../../../core/auth.service';
   imports: [CommonModule, FormsModule, RouterLink, PostSkeletonComponent],
   template: `
     <div class="search-page">
-      <div class="search-bar">
-        <input [(ngModel)]="query" placeholder="Search posts, communities, users..."
-               (keyup.enter)="search()" class="search-input" />
-        <select [(ngModel)]="type" class="search-type" (change)="search()">
-          <option value="all">All</option>
-          <option value="posts">Posts</option>
-          <option value="communities">Communities</option>
-          <option value="users">Users</option>
-        </select>
-        <button (click)="search()" class="search-btn">Search</button>
-      </div>
-
       <app-post-skeleton *ngIf="loading" [count]="5"></app-post-skeleton>
 
       <div class="no-results" *ngIf="!loading && searched && results.length === 0">
@@ -74,44 +62,7 @@ import { AuthService } from '../../../../core/auth.service';
       margin: 2rem auto;
       padding: 0 1rem;
     }
-    .search-bar {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .search-input {
-      flex: 1;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      font-size: 0.95rem;
-      background: var(--bg-main);
-      color: var(--text-main);
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--text-main);
-    }
-    .search-type {
-      padding: 0.6rem;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      font-size: 0.9rem;
-      background: var(--bg-main);
-      color: var(--text-main);
-    }
-    .search-btn {
-      background: var(--text-main);
-      color: var(--bg-main);
-      border: 1px solid var(--text-main);
-      padding: 0.6rem 1.2rem;
-      border-radius: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-    }
-    .search-btn:hover { opacity: 0.8; }
+
     .loading, .no-results {
       text-align: center;
       color: var(--text-muted);
@@ -290,10 +241,7 @@ export class SearchPageComponent implements OnInit {
     });
   }
 
-  search(): void {
-    if (!this.query.trim()) return;
-    this.router.navigate([], { queryParams: { q: this.query, type: this.type }, replaceUrl: true });
-  }
+
 
   doSearch(): void {
     this.loading = true;

@@ -59,7 +59,7 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-apikey}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-noreply@vayam.app}
+      MAIL_FROM: ${MAIL_FROM:-byme2519@gmail.com}
       APP_URL: ${DOMAIN:-https://localhost}
       SPRING_PROFILES_ACTIVE: prod
     depends_on:

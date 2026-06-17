@@ -231,7 +231,20 @@ import { SettingsSkeletonComponent } from '../../../../shared/components/setting
             </div>
             <div class="setting-control" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 0.75rem;">
               <input type="text" [(ngModel)]="newUsername" placeholder="New username" class="settings-input" />
-              <input type="password" [(ngModel)]="usernamePassword" placeholder="Current password" class="settings-input" />
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input [type]="showUsernamePassword ? 'text' : 'password'" [(ngModel)]="usernamePassword" placeholder="Current password" class="settings-input" style="padding-right: 2.5rem; width: 100%;" />
+                <button type="button" (click)="showUsernamePassword = !showUsernamePassword"
+                        style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                  <svg *ngIf="showUsernamePassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <svg *ngIf="!showUsernamePassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
               <button class="btn-primary" [disabled]="!newUsername || newUsername.length < 3 || !usernamePassword || usernameLoading" (click)="changeUsername()">{{ usernameLoading ? 'Updating...' : 'Update Username' }}</button>
               <div *ngIf="usernameError" class="error-msg">{{ usernameError }}</div>
             </div>
@@ -258,7 +271,20 @@ import { SettingsSkeletonComponent } from '../../../../shared/components/setting
             </div>
             <div class="setting-control" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 0.75rem;">
               <input type="email" [(ngModel)]="newEmail" placeholder="New email address" class="settings-input" />
-              <input type="password" [(ngModel)]="emailPassword" placeholder="Current password" class="settings-input" />
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input [type]="showEmailPassword ? 'text' : 'password'" [(ngModel)]="emailPassword" placeholder="Current password" class="settings-input" style="padding-right: 2.5rem; width: 100%;" />
+                <button type="button" (click)="showEmailPassword = !showEmailPassword"
+                        style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                  <svg *ngIf="showEmailPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <svg *ngIf="!showEmailPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
               <button class="btn-primary" [disabled]="!newEmail || !emailPassword || emailLoading" (click)="changeEmail()">{{ emailLoading ? 'Updating...' : 'Update Email' }}</button>
               <div *ngIf="emailError" class="error-msg">{{ emailError }}</div>
             </div>
@@ -275,9 +301,57 @@ import { SettingsSkeletonComponent } from '../../../../shared/components/setting
               <label>Change Password</label>
             </div>
             <div class="setting-control" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 0.75rem;">
-              <input type="password" [(ngModel)]="currentPassword" placeholder="Current Password" class="settings-input" />
-              <input type="password" [(ngModel)]="newPassword" placeholder="New Password" class="settings-input" />
-              <input type="password" [(ngModel)]="confirmPassword" placeholder="Confirm New Password" class="settings-input" />
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input [type]="showCurrentPassword ? 'text' : 'password'" [(ngModel)]="currentPassword" placeholder="Current Password" class="settings-input" style="padding-right: 2.5rem; width: 100%;" />
+                <button type="button" (click)="showCurrentPassword = !showCurrentPassword"
+                        style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                  <svg *ngIf="showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <svg *ngIf="!showCurrentPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="New Password" class="settings-input" style="padding-right: 2.5rem; width: 100%;" />
+                <button type="button" (click)="showNewPassword = !showNewPassword"
+                        style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                  <svg *ngIf="showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <svg *ngIf="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <small *ngIf="newPassword && !PASSWORD_PATTERN.test(newPassword)" style="color: #e74c3c; font-size: 0.8rem; display: block; margin-top: -0.25rem;">
+                Password must be 8-100 characters and contain at least one uppercase, lowercase, digit, and special character (&#64;$!%*?&._#-).
+              </small>
+
+              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="Confirm New Password" class="settings-input" style="padding-right: 2.5rem; width: 100%;" />
+                <button type="button" (click)="showConfirmPassword = !showConfirmPassword"
+                        style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                  <svg *ngIf="showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  <svg *ngIf="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <small *ngIf="confirmPassword && newPassword !== confirmPassword" style="color: #e74c3c; font-size: 0.8rem; display: block; margin-top: -0.25rem;">
+                Passwords do not match.
+              </small>
+
               <button class="btn-primary" [disabled]="!canChangePassword() || passwordLoading" (click)="changePassword()">{{ passwordLoading ? 'Updating...' : 'Update Password' }}</button>
               <div *ngIf="passwordError" class="error-msg">{{ passwordError }}</div>
             </div>
@@ -676,6 +750,13 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
   passwordError = '';
   passwordLoading = false;
 
+  showUsernamePassword = false;
+  showEmailPassword = false;
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+  PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._#\-]).{8,100}$/;
+
   currentUser: any = null;
   is2faSetup = false;
   qrCodeImage = '';
@@ -809,7 +890,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
 
   canChangePassword(): boolean {
     return this.currentPassword.length > 0 && 
-           this.newPassword.length >= 8 && 
+           this.PASSWORD_PATTERN.test(this.newPassword) && 
            this.newPassword === this.confirmPassword;
   }
 

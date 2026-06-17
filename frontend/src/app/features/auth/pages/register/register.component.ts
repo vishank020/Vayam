@@ -50,18 +50,32 @@ import { AuthService } from '../../../../core/auth.service';
 
           <div class="form-group">
             <label for="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              [(ngModel)]="password"
-              required
-              minlength="8"
-              #passwordInput="ngModel"
-              placeholder="Create a password"
-            />
+            <div style="position: relative; display: flex; align-items: center;">
+              <input
+                id="password"
+                name="password"
+                [type]="showPassword ? 'text' : 'password'"
+                [(ngModel)]="password"
+                required
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&._#\\\\-]).{8,100}$"
+                #passwordInput="ngModel"
+                placeholder="Create a password"
+                style="padding-right: 2.5rem; width: 100%;"
+              />
+              <button type="button" (click)="showPassword = !showPassword"
+                      style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 0;">
+                <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
             <small *ngIf="passwordInput.invalid && passwordInput.touched" class="error">
-              Password must be at least 8 characters
+              Password must be 8-100 characters and contain at least one uppercase, lowercase, digit, and special character (&#64;$!%*?&._#-).
             </small>
           </div>
 
@@ -250,6 +264,7 @@ export class RegisterComponent {
   username = '';
   email = '';
   password = '';
+  showPassword = false;
   displayName = '';
   acceptedTerms = false;
   error = '';

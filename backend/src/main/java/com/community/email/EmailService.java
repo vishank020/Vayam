@@ -73,6 +73,12 @@ public class EmailService {
     }
 
     private void send(String to, String subject, String body) {
+        // ALWAYS log the email details to console/logs so it's easy to test and find links
+        System.out.println("\n=== [VAYAM EMAIL SENT] ===");
+        System.out.println("To: " + to);
+        System.out.println("Subject: " + subject);
+        System.out.println("Body:\n" + body);
+        System.out.println("==========================\n");
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);

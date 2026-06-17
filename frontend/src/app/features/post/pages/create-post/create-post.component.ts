@@ -9,7 +9,7 @@ import { AuthService } from '../../../../core/auth.service';
 import { MarkdownEditorComponent } from '../../../shared/markdown-editor/markdown-editor.component';
 import { environment } from '../../../../../environments/environment';
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

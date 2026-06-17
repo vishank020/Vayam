@@ -24,7 +24,7 @@ public class StorageController {
         String objectName = storageService.uploadFile(prefix, file);
         return ResponseEntity.ok(Map.of(
                 "objectName", objectName,
-                "url", "http://localhost:8080/api/storage/download/" + objectName
+                "url", "/api/storage/download/" + objectName
         ));
     }
 
@@ -35,8 +35,26 @@ public class StorageController {
         }
         byte[] data = storageService.getFile(objectName);
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentType(getMediaTypeForFileName(objectName))
                 .body(data);
+    }
+
+    private MediaType getMediaTypeForFileName(String fileName) {
+        String lc = fileName.toLowerCase();
+        if (lc.endsWith(".jpg") || lc.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (lc.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        } else if (lc.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        } else if (lc.endsWith(".webp")) {
+            return MediaType.parseMediaType("image/webp");
+        } else if (lc.endsWith(".mp4")) {
+            return MediaType.parseMediaType("video/mp4");
+        } else if (lc.endsWith(".webm")) {
+            return MediaType.parseMediaType("video/webm");
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 
     @GetMapping("/url/{*objectName}")

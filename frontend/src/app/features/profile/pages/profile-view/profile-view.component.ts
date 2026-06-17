@@ -26,9 +26,14 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     <app-profile-skeleton *ngIf="!profile && !error && !isBlocked"></app-profile-skeleton>
     <div class="profile-container" *ngIf="profile && !isBlocked">
       <div class="profile-header-card">
-        <div class="cover-container img-wrapper" *ngIf="profile.coverUrl">
-          <div class="skeleton skeleton-overlay" *ngIf="!isImageLoaded(profile.coverUrl)"></div>
-          <img [src]="profile.coverUrl" (load)="onImageLoaded(profile.coverUrl)" class="cover-image" alt="Cover" />
+        <div class="cover-container img-wrapper">
+          <ng-container *ngIf="profile.coverUrl; else coverPlaceholder">
+            <div class="skeleton skeleton-overlay" *ngIf="!isImageLoaded(profile.coverUrl)"></div>
+            <img [src]="profile.coverUrl" (load)="onImageLoaded(profile.coverUrl)" class="cover-image" alt="Cover" />
+          </ng-container>
+          <ng-template #coverPlaceholder>
+            <div class="cover-placeholder"></div>
+          </ng-template>
         </div>
         <div class="profile-header-top">
           <div class="avatar-container img-wrapper" style="border-radius: 50%;">
@@ -270,6 +275,7 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     
     .cover-container { position: relative; width: 100%; height: 200px; background: var(--bg-hover); }
     .cover-image { width: 100%; height: 100%; object-fit: cover; }
+    .cover-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, var(--border-color) 0%, var(--bg-hover) 100%); }
     
     .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 2rem; margin-top: -70px; margin-bottom: 1.5rem; }
     
@@ -537,6 +543,7 @@ export class ProfileViewComponent implements OnInit {
       this.userService.getUserByUsername(username!).subscribe({
         next: (profile) => {
           this.profile = profile;
+          this.isOwnProfile = this.currentUser?.id === profile.id;
           this.loadTabData();
         },
         error: () => {

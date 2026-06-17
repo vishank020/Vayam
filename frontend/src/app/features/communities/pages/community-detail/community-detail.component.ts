@@ -1466,7 +1466,7 @@ export class CommunityDetailComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) { this.error = 'Unsupported file type.'; input.value = ''; return; }
     if (file.size > 5 * 1024 * 1024) { this.error = 'File exceeds the 5MB limit.'; input.value = ''; return; }
     this.avatarChangedEvent = event;
@@ -1529,7 +1529,7 @@ export class CommunityDetailComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) { this.error = 'Unsupported file type.'; input.value = ''; return; }
     if (file.size > 10 * 1024 * 1024) { this.error = 'File exceeds the 10MB limit.'; input.value = ''; return; }
     this.bannerChangedEvent = event;

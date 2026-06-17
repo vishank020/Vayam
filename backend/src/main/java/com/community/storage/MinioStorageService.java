@@ -17,7 +17,7 @@ public class MinioStorageService implements FileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(MinioStorageService.class);
     private static final Set<String> ALLOWED_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
             "video/mp4", "video/webm"
     );
 

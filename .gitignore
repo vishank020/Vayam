@@ -33,3 +33,16 @@ Thumbs.db
 
 # Backups
 *.sql.gz
+
+# Test artifacts (root only, not subdirectories)
+/*.json
+/*.txt
+
+# Backend build artifacts
+backend/*.txt
+backend/*.err
+backend/run.cmd
+backend/start-*.bat
+backend/start-*.ps1
+backend/smoke-*.ps1
+backend/test-*.ps1

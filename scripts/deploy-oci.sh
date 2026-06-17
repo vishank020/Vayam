@@ -19,11 +19,13 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker "$(whoami)"
 echo "  Docker installed. Log out and back in if 'docker' needs sudo (newgrp docker)."
 
-echo "==> Cloning repo..."
+REPO_URL="${REPO_URL:-https://github.com/YOUR_ORG/community.git}"
+echo "==> Cloning repo (set REPO_URL env var if different)..."
 cd /opt
-sudo git clone https://github.com/YOUR_ORG/community.git
-sudo chown -R "$(whoami):$(whoami)" community
-cd community
+sudo git clone "$REPO_URL"
+REPO_DIR=$(basename "$REPO_URL" .git)
+sudo chown -R "$(whoami):$(whoami)" "$REPO_DIR"
+cd "$REPO_DIR"
 
 echo "==> Creating .env..."
 cat > .env <<EOF

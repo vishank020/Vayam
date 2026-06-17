@@ -7,7 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'YOUR_ORG'
+    if: github.repository_owner == 'YOUR_ORG' # Replace YOUR_ORG with your GitHub username
     steps:
       - uses: actions/checkout@v4
 

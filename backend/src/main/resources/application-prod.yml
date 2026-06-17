@@ -12,3 +12,8 @@ cors:
 app:
   cookies:
     secure: ${COOKIE_SECURE:true}
+  storage:
+    endpoint: ${MINIO_ENDPOINT}
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
+    bucket-name: ${MINIO_BUCKET}

@@ -23,7 +23,7 @@ public class QnaVote {
     private String targetType;
 
     @Column(nullable = false)
-    private int value;
+    private short value;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -39,7 +39,7 @@ public class QnaVote {
     public String getTargetType() { return targetType; }
     public void setTargetType(String targetType) { this.targetType = targetType; }
     public int getValue() { return value; }
-    public void setValue(int value) { this.value = value; }
+    public void setValue(int value) { this.value = (short) value; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

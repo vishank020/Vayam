@@ -19,6 +19,9 @@ public class GifService {
     }
 
     public String searchGifs(String query) {
+        if (giphyApiKey == null || giphyApiKey.trim().isEmpty() || "null".equalsIgnoreCase(giphyApiKey.trim())) {
+            return "{\"data\":[]}";
+        }
         if (query == null || query.trim().isEmpty()) {
             return "{\"data\":[]}";
         }
@@ -27,7 +30,11 @@ public class GifService {
         String url = String.format("https://api.giphy.com/v1/gifs/search?api_key=%s&q=%s&limit=20&rating=g", 
                 giphyApiKey, encodedQuery);
                 
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-        return response.getBody();
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return "{\"data\":[]}";
+        }
     }
 }

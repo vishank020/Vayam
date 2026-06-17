@@ -71,26 +71,7 @@ No tests exist yet (both `skipTests: true` and zero `.spec`/`Test.java` files). 
 
 **JWT_SECRET and ENCRYPTION_SECRET must each be ≥32 bytes** or JJWT throws `WeakKeyException`. GIPHY_API_KEY can be empty (GIF picker degrades gracefully).
 
-## Production (OCI Free Tier)
-
-```bash
-# 1. Provision an Ampere A1 VM on Oracle Cloud (4 OCPU, 24GB RAM — free)
-# 2. SSH in and run:
-sudo dnf install -y git
-git clone https://github.com/YOUR_ORG/community.git /opt/community
-cd /opt/community
-
-# 3. One-time setup:
-chmod +x scripts/deploy-oci.sh
-./scripts/deploy-oci.sh your-domain.com
-
-# 4. HTTPS (after DNS propagates):
-sudo dnf install -y certbot
-sudo certbot certonly --standalone -d your-domain.com
-sudo cp scripts/nginx-ssl.conf /etc/nginx/conf.d/default.conf
-# Edit the conf — replace YOUR_DOMAIN_HERE with your domain
-sudo nginx -s reload
-```
+## Production
 
 ### Infrastructure (docker-compose.prod.yml)
 
@@ -100,17 +81,6 @@ sudo nginx -s reload
 | `minio` | minio:latest | File storage, port 9000 (internal) |
 | `backend` | Dockerfile (backend/) | Spring Boot API, port 8080 (internal) |
 | `frontend` | Dockerfile (frontend/) | Nginx → Angular static + proxy `/api` & `/ws` to backend, ports 80/443 |
-
-### CI/CD
-
-**GitHub Actions** (`.github/workflows/deploy.yml`): on push to `main`, SSH into OCI VM, `git pull`, `docker compose up -d --build`.
-
-Required GitHub Secrets:
-| Secret | Value |
-|---|---|
-| `OCI_HOST` | OCI VM public IP |
-| `OCI_USER` | `opc` (or your username) |
-| `OCI_SSH_KEY` | Private SSH key for the VM |
 
 ### Environment Variables (`.env`)
 

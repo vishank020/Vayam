@@ -259,7 +259,7 @@ public class AuthController {
         accessCookie.setSecure(this.secureCookies);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(900);
-        accessCookie.setAttribute("SameSite", "Lax");
+        accessCookie.setAttribute("SameSite", this.secureCookies ? "None" : "Lax");
         response.addCookie(accessCookie);
 
         var refreshCookie = new jakarta.servlet.http.Cookie("refresh_token", tokens.refreshToken());
@@ -267,7 +267,7 @@ public class AuthController {
         refreshCookie.setSecure(this.secureCookies);
         refreshCookie.setPath("/api/auth");
         refreshCookie.setMaxAge(604800);
-        refreshCookie.setAttribute("SameSite", "Lax");
+        refreshCookie.setAttribute("SameSite", this.secureCookies ? "None" : "Lax");
         response.addCookie(refreshCookie);
     }
 
@@ -277,6 +277,7 @@ public class AuthController {
         accessCookie.setSecure(this.secureCookies);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(0);
+        accessCookie.setAttribute("SameSite", this.secureCookies ? "None" : "Lax");
         response.addCookie(accessCookie);
 
         var refreshCookie = new jakarta.servlet.http.Cookie("refresh_token", null);

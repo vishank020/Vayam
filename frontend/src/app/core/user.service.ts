@@ -22,6 +22,8 @@ export interface UserResponse {
   isFollowing: boolean | null;
   isTotpEnabled: boolean;
   isMuted?: boolean;
+  email?: string;
+  emailVerified?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -209,6 +209,16 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(
+            @AuthenticationPrincipal AuthPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        authService.resendVerification(principal.userId());
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request.email());

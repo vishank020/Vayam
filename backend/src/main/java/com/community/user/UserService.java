@@ -133,7 +133,9 @@ public class UserService {
                 commentCount,
                 isFollowing,
                 user.isTotpEnabled(),
-                false // You can't mute yourself
+                false, // You can't mute yourself
+                null,
+                false
         );
     }
 
@@ -174,7 +176,9 @@ public class UserService {
                 commentCount,
                 isFollowing,
                 user.isTotpEnabled(),
-                isMuted
+                isMuted,
+                user.getEmail(),
+                user.isEmailVerified()
         );
     }
 

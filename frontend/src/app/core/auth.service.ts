@@ -172,6 +172,10 @@ export class AuthService {
     return this.http.get<void>(`${this.apiUrl}/verify-email`, { params: { token } });
   }
 
+  resendVerification(): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/resend-verification`, {});
+  }
+
   logout(): void {
     this._accessToken = null;
     this.clearCache();

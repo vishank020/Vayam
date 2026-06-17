@@ -258,6 +258,16 @@ public class AuthService {
                 user.getId().toString(), user.getUsername(), user.getRole());
     }
 
+    @Transactional
+    public void resendVerification(String userId) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (user.isEmailVerified()) {
+            throw new IllegalStateException("Email is already verified");
+        }
+        sendVerificationEmail(user);
+    }
+
     private void sendVerificationEmail(User user) {
         verificationTokenRepository.deleteByUserId(user.getId());
 

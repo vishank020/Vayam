@@ -21,5 +21,7 @@ public record UserResponse(
     Long commentCount,
     Boolean isFollowing,
     boolean isTotpEnabled,
-    Boolean isMuted
+    Boolean isMuted,
+    String email,
+    boolean emailVerified
 ) {}

@@ -238,9 +238,23 @@ import { SettingsSkeletonComponent } from '../../../../shared/components/setting
           </div>
 
           <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 1rem;">
-            <div class="setting-info">
+            <div class="setting-info" style="width: 100%;">
               <label>Email</label>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <p style="margin: 0;">Current: <strong>{{ currentUser?.email || 'Not set' }}</strong></p>
+                <span *ngIf="currentUser?.email" 
+                      [ngClass]="currentUser?.emailVerified ? 'badge-success' : 'badge-danger'" 
+                      style="font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; text-transform: uppercase;">
+                  {{ currentUser?.emailVerified ? 'Verified' : 'Unverified' }}
+                </span>
+              </div>
               <p>Current email is used for account-related notifications.</p>
+              <div *ngIf="currentUser && currentUser.email && !currentUser.emailVerified" style="margin-top: 0.75rem;">
+                <button class="btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; text-transform: none; letter-spacing: normal;" 
+                        [disabled]="resendLoading" (click)="resendVerificationEmail()">
+                  {{ resendLoading ? 'Sending link...' : 'Verify Email' }}
+                </button>
+              </div>
             </div>
             <div class="setting-control" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 0.75rem;">
               <input type="email" [(ngModel)]="newEmail" placeholder="New email address" class="settings-input" />
@@ -616,6 +630,9 @@ import { SettingsSkeletonComponent } from '../../../../shared/components/setting
       100% { opacity: 0; }
     }
 
+    .badge-success { background-color: #27ae60; color: white; }
+    .badge-danger { background-color: #e74c3c; color: white; }
+
     @media (max-width: 767px) {
       .settings-container { flex-direction: column; gap: 1.5rem; margin: 1rem auto; }
       .settings-sidebar { flex: none; width: 100%; }
@@ -651,6 +668,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
   emailPassword = '';
   emailError = '';
   emailLoading = false;
+  resendLoading = false;
 
   currentPassword = '';
   newPassword = '';
@@ -873,6 +891,20 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
           this.emailError = 'Could not update email. Please try again.';
         }
         this.emailLoading = false;
+      }
+    });
+  }
+
+  resendVerificationEmail(): void {
+    this.resendLoading = true;
+    this.authService.resendVerification().subscribe({
+      next: () => {
+        this.resendLoading = false;
+        this.toastService.showSuccess('Verification link sent to your email.');
+      },
+      error: (err) => {
+        this.resendLoading = false;
+        this.toastService.showError(err?.error?.message || 'Failed to send verification link.');
       }
     });
   }

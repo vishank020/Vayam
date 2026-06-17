@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { SearchService, SearchResult } from '../../../../core/search.service';
 import { PostSkeletonComponent } from '../../../../shared/components/post-skeleton.component';
+import { FollowService } from '../../../../core/follow.service';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-search-page',
@@ -49,6 +51,11 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
             <div class="result-text">
               <a [routerLink]="result.url" class="result-title">{{ result.title }}</a>
               <p class="result-desc">{{ result.description }}</p>
+            </div>
+            <div *ngIf="result.type === 'USER' && result.id !== currentUserId" class="result-actions">
+              <button class="follow-btn" (click)="toggleFollow($event, result)" [class.following]="followedUsers[result.id]">
+                {{ followedUsers[result.id] ? 'Following' : 'Follow' }}
+              </button>
             </div>
           </div>
         </div>
@@ -199,6 +206,34 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
     .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
     .pagination button:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--text-main); }
     .pagination span { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    
+    .result-actions {
+      flex-shrink: 0;
+    }
+    .follow-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--text-main);
+      background: var(--text-main);
+      color: var(--bg-main);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .follow-btn:hover {
+      opacity: 0.9;
+    }
+    .follow-btn.following {
+      background: transparent;
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+    .follow-btn.following:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
 
     @media (max-width: 767px) {
       .search-page { margin: 1rem auto; }
@@ -222,6 +257,8 @@ export class SearchPageComponent implements OnInit {
   page = 0;
   totalPages = 0;
   loadedImages = new Set<string>();
+  currentUserId: string | null = null;
+  followedUsers: { [userId: string]: boolean } = {};
 
   onImageLoaded(url: string): void {
     this.loadedImages.add(url);
@@ -233,11 +270,16 @@ export class SearchPageComponent implements OnInit {
 
   constructor(
     private searchService: SearchService,
+    private followService: FollowService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.authService.checkAuth().subscribe(u => {
+      this.currentUserId = u ? u.id : null;
+    });
     this.route.queryParams.subscribe(params => {
       if (params['q']) {
         this.query = params['q'];
@@ -261,8 +303,40 @@ export class SearchPageComponent implements OnInit {
         this.results = res.results;
         this.totalPages = Math.ceil(res.total / res.size) || 1;
         this.loading = false;
+
+        // Fetch follow status for USER results
+        if (this.currentUserId) {
+          this.results.forEach(r => {
+            if (r.type === 'USER' && r.id !== this.currentUserId) {
+              this.followService.isFollowing(r.id).subscribe({
+                next: (status) => {
+                  this.followedUsers[r.id] = status.isFollowing;
+                }
+              });
+            }
+          });
+        }
       },
       error: () => this.loading = false
+    });
+  }
+
+  toggleFollow(event: Event, result: SearchResult): void {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!this.currentUserId) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    const isFollowing = this.followedUsers[result.id] || false;
+    const request = isFollowing
+      ? this.followService.unfollow(result.id)
+      : this.followService.follow(result.id);
+
+    request.subscribe({
+      next: () => {
+        this.followedUsers[result.id] = !isFollowing;
+      }
     });
   }
 

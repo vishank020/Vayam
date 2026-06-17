@@ -68,6 +68,9 @@ public class PostService {
 
         User author = userRepository.findById(UUID.fromString(principal.userId()))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
 
         if (request.communityId() != null) {
             Community community = communityRepository.findById(request.communityId())
@@ -287,6 +290,11 @@ public class PostService {
         if (principal == null || !principal.userId().equals(post.getUserId().toString())) {
             throw new IllegalArgumentException("Only the author can update this post");
         }
+        User author = userRepository.findById(UUID.fromString(principal.userId()))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
 
         UUID userId = UUID.fromString(principal.userId());
         post.setTitle(request.title());
@@ -410,6 +418,11 @@ public class PostService {
 
         if (principal == null || !principal.userId().equals(post.getUserId().toString())) {
             throw new IllegalArgumentException("Only the author can delete this post");
+        }
+        User author = userRepository.findById(UUID.fromString(principal.userId()))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
         }
 
         postRepository.delete(post);
@@ -554,6 +567,7 @@ public class PostService {
                     null,
                     null,
                     null,
+                    null,
                     true,
                     post.getCommunityId(),
                     communityName,
@@ -580,6 +594,7 @@ public class PostService {
                 post.getTitle(),
                 post.getContent(),
                 post.getPostType(),
+                post.getUserId(),
                 username,
                 profile != null ? profile.getDisplayName() : null,
                 profile != null ? profile.getAvatarUrl() : null,
@@ -656,6 +671,7 @@ public class PostService {
                     null,
                     null,
                     null,
+                    null,
                     true,
                     post.getCommunityId(),
                     communityName,
@@ -682,6 +698,7 @@ public class PostService {
                 post.getTitle(),
                 post.getContent(),
                 post.getPostType(),
+                post.getUserId(),
                 username,
                 profile != null ? profile.getDisplayName() : null,
                 profile != null ? profile.getAvatarUrl() : null,

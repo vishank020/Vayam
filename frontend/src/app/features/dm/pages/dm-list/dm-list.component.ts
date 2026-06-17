@@ -41,8 +41,11 @@ import { CommentSkeletonComponent } from '../../../../shared/components/comment-
             {{ (c.otherParticipantDisplayName || c.otherParticipantUsername || '?').charAt(0).toUpperCase() }}
           </div>
           <div class="conversation-info">
-            <div class="conversation-name">
-              {{ c.otherParticipantDisplayName || c.otherParticipantUsername }}
+            <div class="conversation-name-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div class="conversation-name">
+                {{ c.otherParticipantDisplayName || c.otherParticipantUsername }}
+              </div>
+              <span class="unread-badge" *ngIf="c.unreadCount > 0">{{ c.unreadCount }}</span>
             </div>
             <div class="conversation-preview" *ngIf="c.lastMessage">
               {{ c.lastMessage }}
@@ -174,6 +177,19 @@ import { CommentSkeletonComponent } from '../../../../shared/components/comment-
       color: var(--text-muted);
       font-size: 0.75rem;
       margin-top: 0.15rem;
+    }
+    .unread-badge {
+      background: #e74c3c;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 9999px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.2;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
     }
   `]
 })

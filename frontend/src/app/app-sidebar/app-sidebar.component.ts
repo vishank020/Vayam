@@ -1,8 +1,10 @@
-import { Component, Input, HostListener } from '@angular/core';
+import { Component, Input, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { SidebarService } from '../core/sidebar.service';
+import { DmService } from '../core/dm.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
@@ -26,6 +28,7 @@ import { SidebarService } from '../core/sidebar.service';
         <a routerLink="/dm" routerLinkActive="active" class="nav-item" (click)="closeOnNav()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           Messages
+          <span class="dm-badge" *ngIf="unreadDmCount > 0">{{ unreadDmCount }}</span>
         </a>
 
         <div class="nav-divider"></div>
@@ -104,6 +107,17 @@ import { SidebarService } from '../core/sidebar.service';
       stroke: var(--accent-color);
     }
 
+    .dm-badge {
+      background: #e74c3c;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 9999px;
+      margin-left: auto;
+      line-height: 1.1;
+    }
+
     .nav-divider {
       height: 1px;
       background-color: var(--border-color);
@@ -158,14 +172,36 @@ import { SidebarService } from '../core/sidebar.service';
     }
   `]
 })
-export class AppSidebarComponent {
+export class AppSidebarComponent implements OnInit, OnDestroy {
   @Input() open = false;
+  unreadDmCount = 0;
+  private sub = new Subscription();
 
   constructor(
     public authService: AuthService,
     private router: Router,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private dmService: DmService
   ) {}
+
+  ngOnInit() {
+    this.sub.add(
+      this.dmService.unreadCount$.subscribe(c => this.unreadDmCount = c)
+    );
+    this.sub.add(
+      this.authService.currentUser$.subscribe(user => {
+        if (user) {
+          this.dmService.fetchUnreadCount();
+        } else {
+          this.dmService.setUnreadCount(0);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
+  }
 
   onFeedClick(event: Event) {
     if (this.router.url === '/feed' || this.router.url === '/') {

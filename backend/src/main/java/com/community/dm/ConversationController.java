@@ -17,8 +17,10 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.community.dm.repository.ConversationParticipantRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -28,6 +30,7 @@ public class ConversationController {
 
     private final ConversationService conversationService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ConversationParticipantRepository participantRepository;
 
     @PostMapping
     public ResponseEntity<ConversationResponse> createConversation(
@@ -71,8 +74,36 @@ public class ConversationController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/unread-count")
+    public ResponseEntity<Map<String, Long>> getUnreadCount() {
+        return ResponseEntity.ok(Map.of("unreadCount", conversationService.getTotalUnreadCount(getPrincipal())));
+    }
+
+    @PutMapping("/{id}/messages/{messageId}")
+    public ResponseEntity<MessageResponse> editMessage(
+            @PathVariable UUID id,
+            @PathVariable UUID messageId,
+            @Valid @RequestBody SendMessageRequest request) {
+        return ResponseEntity.ok(conversationService.editMessage(id, messageId, request.body(), getPrincipal()));
+    }
+
+    @DeleteMapping("/{id}/messages/{messageId}")
+    public ResponseEntity<MessageResponse> deleteMessage(
+            @PathVariable UUID id,
+            @PathVariable UUID messageId) {
+        return ResponseEntity.ok(conversationService.deleteMessage(id, messageId, getPrincipal()));
+    }
+
     private void notifyParticipants(UUID conversationId, MessageResponse msg) {
         messagingTemplate.convertAndSend("/topic/chat/" + conversationId, msg);
+        List<ConversationParticipant> participants = participantRepository.findByConversationId(conversationId);
+        for (ConversationParticipant cp : participants) {
+            messagingTemplate.convertAndSendToUser(
+                cp.getUser().getUsername(),
+                "/queue/messages",
+                msg
+            );
+        }
     }
 
     private AuthPrincipal getPrincipal() {

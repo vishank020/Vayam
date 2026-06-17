@@ -26,6 +26,12 @@ public class Message {
     @Column(name = "read_at")
     private Instant readAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+    @Column(name = "is_edited", nullable = false)
+    private boolean isEdited = false;
+
     public Message() {
         this.id = UUID.randomUUID();
         this.sentAt = Instant.now();
@@ -48,4 +54,10 @@ public class Message {
 
     public Instant getReadAt() { return readAt; }
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
+
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean deleted) { isDeleted = deleted; }
+
+    public boolean isEdited() { return isEdited; }
+    public void setEdited(boolean edited) { isEdited = edited; }
 }

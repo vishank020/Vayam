@@ -1,6 +1,8 @@
 package com.community.qna;
 
 import com.community.auth.AuthPrincipal;
+import com.community.notification.NotificationService;
+import com.community.notification.NotificationType;
 import com.community.qna.dto.*;
 import com.community.qna.vote.QnaVote;
 import com.community.qna.vote.QnaVoteRepository;
@@ -23,12 +25,18 @@ public class QnaService {
     private final AnswerRepository answerRepository;
     private final UserRepository userRepository;
     private final QnaVoteRepository qnaVoteRepository;
+    private final NotificationService notificationService;
 
-    public QnaService(QuestionRepository questionRepository, AnswerRepository answerRepository, UserRepository userRepository, QnaVoteRepository qnaVoteRepository) {
+    public QnaService(QuestionRepository questionRepository,
+                      AnswerRepository answerRepository,
+                      UserRepository userRepository,
+                      QnaVoteRepository qnaVoteRepository,
+                      NotificationService notificationService) {
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.userRepository = userRepository;
         this.qnaVoteRepository = qnaVoteRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -106,6 +114,17 @@ public class QnaService {
         question.setAnswerCount(question.getAnswerCount() + 1);
         questionRepository.save(question);
 
+        if (!question.getAuthor().getId().equals(author.getId())) {
+            notificationService.createNotification(
+                    question.getAuthor().getId(),
+                    NotificationType.ANSWER,
+                    questionId,
+                    "question",
+                    author.getId(),
+                    author.getUsername() + " answered your question"
+            );
+        }
+
         return toAnswerResponse(answer, principal, 0, null);
     }
 
@@ -116,6 +135,8 @@ public class QnaService {
         if (principal == null || !principal.userId().equals(question.getAuthor().getId().toString())) {
             throw new IllegalArgumentException("Only the question author can accept an answer");
         }
+        
+        findUser(principal.userId()); // Enforce email verification check for the question author
 
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new IllegalArgumentException("Answer not found"));
@@ -129,6 +150,17 @@ public class QnaService {
 
         answer.setAccepted(true);
         answerRepository.save(answer);
+
+        if (!answer.getAuthor().getId().equals(question.getAuthor().getId())) {
+            notificationService.createNotification(
+                    answer.getAuthor().getId(),
+                    NotificationType.ANSWER_ACCEPT,
+                    questionId,
+                    "question",
+                    question.getAuthor().getId(),
+                    question.getAuthor().getUsername() + " accepted your answer"
+            );
+        }
     }
 
     @Transactional
@@ -223,8 +255,12 @@ public class QnaService {
     }
 
     private User findUser(String userId) {
-        return userRepository.findById(UUID.fromString(userId))
+        User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!user.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
+        return user;
     }
 
     @Transactional
@@ -232,6 +268,7 @@ public class QnaService {
         if (principal == null) {
             throw new AccessDeniedException("Authentication required");
         }
+        findUser(principal.userId());
         UUID userId = UUID.fromString(principal.userId());
 
         if ("QUESTION".equals(targetType)) {

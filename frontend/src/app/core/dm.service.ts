@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ConversationResponse {
@@ -11,6 +11,7 @@ export interface ConversationResponse {
   lastMessage: string | null;
   lastMessageAt: string | null;
   createdAt: string;
+  unreadCount: number;
 }
 
 export interface MessageResponse {
@@ -21,6 +22,8 @@ export interface MessageResponse {
   body: string;
   sentAt: string;
   readAt: string | null;
+  isDeleted: boolean;
+  isEdited: boolean;
 }
 
 export interface CreateConversationRequest {
@@ -30,8 +33,21 @@ export interface CreateConversationRequest {
 @Injectable({ providedIn: 'root' })
 export class DmService {
   private apiUrl = `${environment.apiUrl}/conversations`;
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  unreadCount$ = this.unreadCountSubject.asObservable();
 
   constructor(private http: HttpClient) {}
+
+  fetchUnreadCount(): void {
+    this.getUnreadCount().subscribe({
+      next: (res) => this.unreadCountSubject.next(res.unreadCount),
+      error: () => {}
+    });
+  }
+
+  setUnreadCount(count: number): void {
+    this.unreadCountSubject.next(count);
+  }
 
   createConversation(request: CreateConversationRequest): Observable<ConversationResponse> {
     return this.http.post<ConversationResponse>(this.apiUrl, request);
@@ -51,5 +67,17 @@ export class DmService {
 
   markAsRead(conversationId: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${conversationId}/read`, {});
+  }
+
+  getUnreadCount(): Observable<{ unreadCount: number }> {
+    return this.http.get<{ unreadCount: number }>(`${this.apiUrl}/unread-count`);
+  }
+
+  editMessage(conversationId: string, messageId: string, body: string): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(`${this.apiUrl}/${conversationId}/messages/${messageId}`, { body });
+  }
+
+  deleteMessage(conversationId: string, messageId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${conversationId}/messages/${messageId}`);
   }
 }

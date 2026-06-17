@@ -1,7 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SidebarService } from '../../core/sidebar.service';
+import { DmService } from '../../core/dm.service';
+import { NotificationService } from '../../core/notification.service';
+import { AuthService } from '../../core/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-bottom-nav',
@@ -41,11 +45,14 @@ import { SidebarService } from '../../core/sidebar.service';
         <span class="tab-label">Search</span>
       </a>
       <button class="nav-tab nav-tab--menu" (click)="openSidebar()" aria-label="Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
+        <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <span class="menu-badge" *ngIf="unreadDmCount > 0 || unreadNotificationCount > 0"></span>
+        </div>
         <span class="tab-label">Menu</span>
       </button>
     </nav>
@@ -92,6 +99,16 @@ import { SidebarService } from '../../core/sidebar.service';
     .nav-tab svg {
       display: block;
     }
+    .menu-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 8px;
+      height: 8px;
+      background-color: #e74c3c;
+      border-radius: 50%;
+      border: 1px solid var(--bg-main);
+    }
     .tab-label {
       font-size: 0.6rem;
       font-weight: 700;
@@ -114,8 +131,30 @@ import { SidebarService } from '../../core/sidebar.service';
     }
   `]
 })
-export class BottomNavComponent {
-  constructor(private sidebarService: SidebarService) {}
+export class BottomNavComponent implements OnInit, OnDestroy {
+  unreadDmCount = 0;
+  unreadNotificationCount = 0;
+  private sub = new Subscription();
+
+  constructor(
+    private sidebarService: SidebarService,
+    private dmService: DmService,
+    private notificationService: NotificationService,
+    public authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    this.sub.add(
+      this.dmService.unreadCount$.subscribe(c => this.unreadDmCount = c)
+    );
+    this.sub.add(
+      this.notificationService.unreadCount$.subscribe(c => this.unreadNotificationCount = c)
+    );
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
+  }
 
   openSidebar(): void {
     this.sidebarService.toggle();

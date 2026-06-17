@@ -28,6 +28,8 @@ export interface PostResponse {
   tagId?: string | null;
   tagName?: string | null;
   tagColor?: string | null;
+  isEdited?: boolean;
+  editedAt?: string;
 }
 
 export interface FeedPostResponse {
@@ -35,6 +37,7 @@ export interface FeedPostResponse {
   title: string;
   content: string;
   postType: 'GENERAL' | 'ACHIEVEMENT' | 'PROJECT' | 'JOB';
+  authorId: string | null;
   authorUsername: string | null;
   authorDisplayName: string | null;
   authorAvatarUrl: string | null;

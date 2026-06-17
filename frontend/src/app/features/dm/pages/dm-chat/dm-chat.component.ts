@@ -27,13 +27,40 @@ import { WebSocketService } from '../../../../core/websocket.service';
       <div class="message-list" #messageList *ngIf="!loading">
         <div
           *ngFor="let msg of messages"
-          class="message"
+          class="message-wrapper"
           [ngClass]="{'own': msg.senderId === currentUserId}"
         >
-          <div class="message-body">{{ msg.body }}</div>
-          <div class="message-time">
-            <span>{{ msg.sentAt | date:'h:mm a' }}</span>
-            <span *ngIf="msg.senderId === currentUserId && msg.readAt" class="read-indicator"> ✓✓</span>
+          <div class="message" [ngClass]="{'own-bubble': msg.senderId === currentUserId}">
+            <!-- Edit Mode -->
+            <div *ngIf="editingMessageId === msg.id" class="edit-mode">
+              <input [(ngModel)]="editingText" (keyup.enter)="saveEdit(msg)" class="edit-input" />
+              <div class="edit-actions">
+                <button (click)="saveEdit(msg)">Save</button>
+                <button (click)="cancelEdit()">Cancel</button>
+              </div>
+            </div>
+            
+            <!-- Normal Mode -->
+            <div *ngIf="editingMessageId !== msg.id">
+              <div class="message-body">
+                {{ msg.body }}
+                <span *ngIf="msg.isEdited && !msg.isDeleted" class="edited-label">(edited)</span>
+              </div>
+              <div class="message-time">
+                <span>{{ msg.sentAt | date:'h:mm a' }}</span>
+                <span *ngIf="msg.senderId === currentUserId && msg.readAt" class="read-indicator"> ✓✓</span>
+              </div>
+            </div>
+
+            <!-- Hover menu for own messages -->
+            <div class="hover-menu" *ngIf="msg.senderId === currentUserId && !msg.isDeleted && editingMessageId !== msg.id">
+              <button class="menu-btn" (click)="startEdit(msg)" title="Edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="menu-btn danger" (click)="deleteMsg(msg)" title="Delete for everyone">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
           </div>
         </div>
         <div *ngIf="messages.length === 0" class="empty">
@@ -95,19 +122,104 @@ import { WebSocketService } from '../../../../core/websocket.service';
       gap: 0.4rem;
       padding: 0.5rem 0;
     }
+    .message-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .message-wrapper.own {
+      align-items: flex-end;
+    }
     .message {
       max-width: 75%;
       padding: 0.5rem 0.75rem;
       border-radius: 12px;
       font-size: 0.95rem;
       line-height: 1.4;
-      align-self: flex-start;
       background: var(--bg-elevated);
+      position: relative;
     }
-    .message.own {
-      align-self: flex-end;
+    .message.own-bubble {
       background: var(--accent-color);
       color: white;
+    }
+    .message:hover .hover-menu {
+      display: flex;
+    }
+    .hover-menu {
+      display: none;
+      position: absolute;
+      top: -24px;
+      right: 4px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2px;
+      gap: 2px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    .own-bubble .hover-menu {
+      left: 4px;
+      right: auto;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--text-muted);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+    .menu-btn.danger:hover {
+      color: var(--danger);
+    }
+    .edited-label {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-left: 0.25rem;
+    }
+    .edit-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 150px;
+    }
+    .edit-input {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+    .edit-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+    .edit-actions button {
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+    .edit-actions button:first-child {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
     }
     .message-body { word-wrap: break-word; }
     .message-time {
@@ -219,8 +331,28 @@ export class DmChatComponent implements OnInit, OnDestroy {
     if (!this.conversationId) return;
     this.wsSubscription = this.wsService.subscribeToConversation(this.conversationId).subscribe({
       next: (msg: MessageResponse) => {
-        if (!this.messages.some(m => m.id === msg.id)) {
+        if (msg.body === 'READ_RECEIPT') {
+          // Other participant marked our messages as read
+          this.messages.forEach(m => {
+            if (m.senderId === this.currentUserId && !m.readAt) {
+              m.readAt = msg.sentAt;
+            }
+          });
+          return;
+        }
+
+        const idx = this.messages.findIndex(m => m.id === msg.id);
+        if (idx !== -1) {
+          // Message edited or deleted
+          this.messages[idx].body = msg.body;
+          this.messages[idx].isEdited = msg.isEdited;
+          this.messages[idx].isDeleted = msg.isDeleted;
+        } else {
+          // New message
           this.messages.push(msg);
+          if (msg.senderId !== this.currentUserId) {
+            this.markAsRead();
+          }
           setTimeout(() => this.scrollToBottom());
         }
       }
@@ -257,5 +389,41 @@ export class DmChatComponent implements OnInit, OnDestroy {
     if (this.messageListRef) {
       this.messageListRef.nativeElement.scrollTop = this.messageListRef.nativeElement.scrollHeight;
     }
+  }
+
+  editingMessageId: string | null = null;
+  editingText = '';
+
+  startEdit(msg: MessageResponse): void {
+    this.editingMessageId = msg.id;
+    this.editingText = msg.body;
+  }
+
+  cancelEdit(): void {
+    this.editingMessageId = null;
+    this.editingText = '';
+  }
+
+  saveEdit(msg: MessageResponse): void {
+    if (!this.editingText.trim() || !this.conversationId) return;
+    this.dmService.editMessage(this.conversationId, msg.id, this.editingText).subscribe({
+      next: (updated) => {
+        msg.body = updated.body;
+        msg.isEdited = true;
+        this.cancelEdit();
+      },
+      error: () => {}
+    });
+  }
+
+  deleteMsg(msg: MessageResponse): void {
+    if (!confirm('Are you sure you want to delete this message for everyone?') || !this.conversationId) return;
+    this.dmService.deleteMessage(this.conversationId, msg.id).subscribe({
+      next: () => {
+        msg.body = '[Message deleted]';
+        msg.isDeleted = true;
+      },
+      error: () => {}
+    });
   }
 }

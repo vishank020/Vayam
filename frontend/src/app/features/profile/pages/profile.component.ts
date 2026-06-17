@@ -15,11 +15,12 @@ import { timeAgo } from '../../../core/time-ago';
 import { PostActionsMenuComponent } from '../../post/components/post-actions-menu/post-actions-menu.component';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../core/post-interaction.util';
 import { ProjectListComponent } from '../../project/components/project-list/project-list.component';
+import { ShareDmModalComponent } from '../../../shared/components/share-dm-modal.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImageCropperComponent, PostActionsMenuComponent, ProjectListComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ImageCropperComponent, PostActionsMenuComponent, ProjectListComponent, ShareDmModalComponent],
   template: `
     <div class="profile-container">
       <div class="profile-header-card">
@@ -181,6 +182,7 @@ import { ProjectListComponent } from '../../project/components/project-list/proj
                   <div style="margin-left: auto;">
                     <app-post-actions-menu
                       [postId]="post.id"
+                      [authorId]="post.authorId"
                       [authorUsername]="post.authorUsername"
                       (deleteRequested)="onPostDeleted(post)"
                       (hidden)="onPostHidden(post)">
@@ -284,6 +286,12 @@ import { ProjectListComponent } from '../../project/components/project-list/proj
         </div>
       </div>
     </div>
+    <app-share-dm-modal
+      *ngIf="sharingPost"
+      [postId]="sharingPost.id"
+      [postTitle]="sharingPost.title"
+      (close)="sharingPost = null"
+    ></app-share-dm-modal>
   `,
   styles: [`
     .profile-container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
@@ -478,6 +486,7 @@ export class ProfileComponent implements OnInit {
   followCounts: FollowCountResponse | null = null;
 
   activeTab: 'posts' | 'comments' | 'saved' | 'upvoted' | 'projects' = 'posts';
+  sharingPost: FeedPostResponse | null = null;
   timeAgo = timeAgo;
   tabPosts: FeedPostResponse[] = [];
   tabComments: CommentResponse[] = [];
@@ -812,17 +821,7 @@ export class ProfileComponent implements OnInit {
   sharePost(event: Event, post: FeedPostResponse): void {
     event.stopPropagation();
     event.preventDefault();
-    const url = `${window.location.origin}/posts/${post.id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: post.title || 'Community Post',
-        url: url
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('Link copied to clipboard');
-      });
-    }
+    this.sharingPost = post;
   }
 
   goToComments(event: Event, post: FeedPostResponse): void {

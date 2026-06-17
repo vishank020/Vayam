@@ -16,11 +16,12 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
 import { DmService } from '../../../../core/dm.service';
 import { ProfileSkeletonComponent } from '../../../../shared/components/profile-skeleton.component';
 import { PostSkeletonComponent } from '../../../../shared/components/post-skeleton.component';
+import { ShareDmModalComponent } from '../../../../shared/components/share-dm-modal.component';
 
 @Component({
   selector: 'app-profile-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProjectListComponent, PostActionsMenuComponent, ProfileSkeletonComponent, PostSkeletonComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ProjectListComponent, PostActionsMenuComponent, ProfileSkeletonComponent, PostSkeletonComponent, ShareDmModalComponent],
   template: `
     <app-profile-skeleton *ngIf="!profile && !error && !isBlocked"></app-profile-skeleton>
     <div class="profile-container" *ngIf="profile && !isBlocked">
@@ -139,7 +140,7 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
                     </div>
                   </div>
                     <div style="margin-left: auto;">
-                      <app-post-actions-menu [postId]="post.id" [authorUsername]="post.authorUsername" (deleteRequested)="onPostDeleted(post)" (hidden)="onPostHidden(post)"></app-post-actions-menu>
+                      <app-post-actions-menu [postId]="post.id" [authorId]="post.authorId" [authorUsername]="post.authorUsername" (deleteRequested)="onPostDeleted(post)" (hidden)="onPostHidden(post)"></app-post-actions-menu>
                     </div>
                 </div>
                 <a [routerLink]="['/posts', post.id]" class="title">{{ post.title }}</a>
@@ -255,6 +256,12 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
         <a routerLink="/feed" class="btn-secondary" style="display:inline-block; margin-top:1rem; text-decoration:none;">Back to Feed</a>
       </div>
     </div>
+    <app-share-dm-modal
+      *ngIf="sharingPost"
+      [postId]="sharingPost.id"
+      [postTitle]="sharingPost.title"
+      (close)="sharingPost = null"
+    ></app-share-dm-modal>
   `,
   styles: [`
     .profile-container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
@@ -483,6 +490,7 @@ export class ProfileViewComponent implements OnInit {
     return this.loadedImages.has(url);
   }
   isBlocked = false;
+  sharingPost: FeedPostResponse | null = null;
   activeTab: 'posts' | 'comments' | 'projects' = 'posts';
   timeAgo = timeAgo;
   showReport = false;
@@ -793,17 +801,7 @@ export class ProfileViewComponent implements OnInit {
   sharePost(event: Event, post: FeedPostResponse): void {
     event.stopPropagation();
     event.preventDefault();
-    const url = `${window.location.origin}/posts/${post.id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: post.title || 'Community Post',
-        url: url
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        this.toastService.showSuccess('Link copied to clipboard');
-      });
-    }
+    this.sharingPost = post;
   }
 
   goToComments(event: Event, post: FeedPostResponse): void {

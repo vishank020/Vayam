@@ -292,6 +292,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
     if (n.referenceType === 'post' && n.referenceId) {
       this.open = false;
       this.router.navigate(['/posts', n.referenceId]);
+    } else if (n.referenceType === 'question' && n.referenceId) {
+      this.open = false;
+      this.router.navigate(['/questions', n.referenceId]);
     } else if (n.referenceType === 'user' && n.actorUsername) {
       this.open = false;
       this.router.navigate(['/u', n.actorUsername]);
@@ -323,6 +326,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       case 'COMMENT': return 'New Comment';
       case 'LIKE': return 'Like';
       case 'MENTION': return 'Mention';
+      case 'ANSWER': return 'New Answer';
+      case 'ANSWER_ACCEPT': return 'Answer Accepted';
       default: return type;
     }
   }

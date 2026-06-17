@@ -43,6 +43,9 @@ public class CommentService {
 
         User author = userRepository.findById(UUID.fromString(principal.userId()))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
 
         Comment comment = new Comment();
         comment.setPostId(postId);
@@ -151,6 +154,11 @@ public class CommentService {
         if (principal == null || !principal.userId().equals(comment.getUserId().toString())) {
             throw new IllegalArgumentException("Only the author can delete this comment");
         }
+        User author = userRepository.findById(UUID.fromString(principal.userId()))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
 
         commentRepository.delete(comment);
     }
@@ -166,6 +174,11 @@ public class CommentService {
 
         if (!principal.userId().equals(comment.getUserId().toString())) {
             throw new IllegalArgumentException("Only the author can edit this comment");
+        }
+        User author = userRepository.findById(UUID.fromString(principal.userId()))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!author.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
         }
 
         comment.setContent(content);

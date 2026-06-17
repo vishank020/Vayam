@@ -7,6 +7,7 @@ import { PostService } from '../../../../core/post.service';
 import { CommunityService, CommunityMemberResponse } from '../../../../core/community.service';
 import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.service';
 import { ToastService } from '../../../../core/toast.service';
+import { FollowService } from '../../../../core/follow.service';
 
 @Component({
   selector: 'app-post-actions-menu',
@@ -47,6 +48,9 @@ import { ToastService } from '../../../../core/toast.service';
         <ng-container *ngIf="!isOwner">
           <button class="menu-item" (click)="followPost()">
             Follow Post
+          </button>
+          <button class="menu-item" *ngIf="authorId" (click)="toggleFollowAuthor()">
+            {{ isFollowingAuthor ? 'Unfollow Author' : 'Follow Author' }}
           </button>
           <button class="menu-item" (click)="notInterested()">
             Not Interested
@@ -155,6 +159,8 @@ export class PostActionsMenuComponent implements OnInit {
 
   isOpen = false;
   isOwner = false;
+  isFollowingAuthor = false;
+  isLoggedIn = false;
   
   // Report modal state
   showReportModal = false;
@@ -163,16 +169,19 @@ export class PostActionsMenuComponent implements OnInit {
   customReason = '';
 
   constructor(
+    private router: Router,
     private authService: AuthService,
     private postService: PostService,
     private communityService: CommunityService,
     private toastService: ToastService,
     private anonymousBrowsingService: AnonymousBrowsingService,
+    private followService: FollowService,
     private eRef: ElementRef
   ) {}
 
   ngOnInit(): void {
     this.authService.checkAuth().subscribe(u => {
+      this.isLoggedIn = u !== null;
       if (!u) {
         this.isOwner = false;
       } else if (this.authorId && u.id === this.authorId) {
@@ -181,6 +190,15 @@ export class PostActionsMenuComponent implements OnInit {
         this.isOwner = true;
       } else {
         this.isOwner = false;
+      }
+
+      if (this.isLoggedIn && !this.isOwner && this.authorId) {
+        this.followService.isFollowing(this.authorId).subscribe({
+          next: (res) => {
+            this.isFollowingAuthor = res.isFollowing;
+          },
+          error: () => {}
+        });
       }
     });
   }
@@ -229,6 +247,11 @@ export class PostActionsMenuComponent implements OnInit {
   // --- Viewer Actions ---
 
   savePost(): void {
+    if (!this.isLoggedIn) {
+      this.closeMenu();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.closeMenu();
     if (!this.anonymousBrowsingService.interceptAction()) return;
     const currentlySaved = this.isSaved;
@@ -247,21 +270,61 @@ export class PostActionsMenuComponent implements OnInit {
   }
 
   followPost(): void {
+    if (!this.isLoggedIn) {
+      this.closeMenu();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.closeMenu();
     if (!this.anonymousBrowsingService.interceptAction()) return;
     // TODO: simulated — backend endpoint not yet implemented
     this.toastService.show('Follow feature coming soon (missing backend support).');
   }
 
-  notInterested(): void {
-    if (!this.anonymousBrowsingService.interceptAction()) return;
+  toggleFollowAuthor(): void {
+    if (!this.isLoggedIn) {
+      this.closeMenu();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.closeMenu();
+    if (!this.anonymousBrowsingService.interceptAction()) return;
+    if (!this.authorId) return;
+
+    const request = this.isFollowingAuthor
+      ? this.followService.unfollow(this.authorId)
+      : this.followService.follow(this.authorId);
+
+    request.subscribe({
+      next: () => {
+        this.isFollowingAuthor = !this.isFollowingAuthor;
+        this.toastService.showSuccess(this.isFollowingAuthor ? 'Followed user' : 'Unfollowed user');
+      },
+      error: () => {
+        this.toastService.showError('Failed to update follow status');
+      }
+    });
+  }
+
+  notInterested(): void {
+    if (!this.isLoggedIn) {
+      this.closeMenu();
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.closeMenu();
+    if (!this.anonymousBrowsingService.interceptAction()) return;
     this.hidden.emit();
   }
 
   // --- Report Actions ---
 
   openReportModal(): void {
+    if (!this.isLoggedIn) {
+      this.closeMenu();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.closeMenu();
     if (!this.anonymousBrowsingService.interceptAction()) return;
     this.showReportModal = true;
@@ -281,6 +344,10 @@ export class PostActionsMenuComponent implements OnInit {
 
   submitReport(): void {
     if (!this.anonymousBrowsingService.interceptAction()) return;
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
     const reason = this.selectedReason === 'Other' ? this.customReason.trim() : this.selectedReason;
     this.postService.reportPost(this.postId, reason).subscribe({
       next: () => {

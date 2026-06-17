@@ -13,6 +13,7 @@ import com.community.user.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,17 +29,20 @@ public class ConversationService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ConversationService(ConversationRepository conversationRepository,
                                ConversationParticipantRepository participantRepository,
                                MessageRepository messageRepository,
                                UserRepository userRepository,
-                               UserProfileRepository userProfileRepository) {
+                               UserProfileRepository userProfileRepository,
+                               SimpMessagingTemplate messagingTemplate) {
         this.conversationRepository = conversationRepository;
         this.participantRepository = participantRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -47,6 +51,12 @@ public class ConversationService {
             throw new IllegalArgumentException("Authentication required");
         }
         UUID currentUserId = UUID.fromString(principal.userId());
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!currentUser.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
+
         Set<UUID> allIds = new HashSet<>(participantIds);
         allIds.add(currentUserId);
 
@@ -111,13 +121,20 @@ public class ConversationService {
             lastMessageByConv.put(convId, m);
         }
 
-        // Step 5: Fetch conversation entities (1 query)
+        // Step 5: Fetch unread counts in batch (1 query)
+        List<Object[]> unreadCounts = messageRepository.countUnreadPerConversation(ids, userId);
+        Map<UUID, Long> unreadCountMap = new HashMap<>();
+        for (Object[] row : unreadCounts) {
+            unreadCountMap.put((UUID) row[0], (Long) row[1]);
+        }
+
+        // Step 6: Fetch conversation entities (1 query)
         Map<UUID, Conversation> conversationMap = new HashMap<>();
         for (Conversation c : conversationRepository.findAllById(ids)) {
             conversationMap.put(c.getId(), c);
         }
 
-        // Step 6: Assemble responses from maps
+        // Step 7: Assemble responses from maps
         List<ConversationResponse> responses = new ArrayList<>(ids.size());
         for (UUID convId : ids) {
             List<ConversationParticipant> participants = participantsByConv.getOrDefault(convId, List.of());
@@ -138,12 +155,14 @@ public class ConversationService {
 
             Message lastMsg = lastMessageByConv.get(convId);
             Conversation conv = conversationMap.get(convId);
+            long unreadCount = unreadCountMap.getOrDefault(convId, 0L);
 
             responses.add(new ConversationResponse(
                     convId, otherUserId, otherUsername, otherDisplayName,
                     lastMsg != null ? lastMsg.getBody() : null,
                     lastMsg != null ? lastMsg.getSentAt() : null,
-                    conv != null ? conv.getCreatedAt() : null
+                    conv != null ? conv.getCreatedAt() : null,
+                    unreadCount
             ));
         }
 
@@ -158,7 +177,12 @@ public class ConversationService {
         UUID userId = UUID.fromString(principal.userId());
         boolean isParticipant = participantRepository.findByConversationIdAndUserId(conversationId, userId).isPresent();
         if (!isParticipant) throw new IllegalArgumentException("Not a participant in this conversation");
+        
         messageRepository.markAsRead(conversationId, userId, Instant.now());
+
+        // Broadcast read receipt event
+        MessageResponse receipt = new MessageResponse(null, conversationId, userId, null, "READ_RECEIPT", Instant.now(), Instant.now(), false, false);
+        messagingTemplate.convertAndSend("/topic/chat/" + conversationId, receipt);
     }
 
     @Transactional(readOnly = true)
@@ -181,6 +205,12 @@ public class ConversationService {
             throw new IllegalArgumentException("Authentication required");
         }
         UUID userId = UUID.fromString(principal.userId());
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!currentUser.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
+
         boolean isParticipant = participantRepository.findByConversationIdAndUserId(conversationId, userId).isPresent();
         if (!isParticipant) {
             throw new IllegalArgumentException("Not a participant in this conversation");
@@ -193,6 +223,76 @@ public class ConversationService {
         messageRepository.save(msg);
 
         return toMessageResponse(msg);
+    }
+
+    @Transactional
+    public MessageResponse editMessage(UUID conversationId, UUID messageId, String newBody, AuthPrincipal principal) {
+        if (principal == null) throw new IllegalArgumentException("Authentication required");
+        UUID userId = UUID.fromString(principal.userId());
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!currentUser.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
+
+        Message msg = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+
+        if (!msg.getConversationId().equals(conversationId)) {
+            throw new IllegalArgumentException("Message does not belong to this conversation");
+        }
+
+        if (!msg.getSenderId().equals(userId)) {
+            throw new IllegalArgumentException("Only the sender can edit this message");
+        }
+
+        if (msg.isDeleted()) {
+            throw new IllegalArgumentException("Cannot edit a deleted message");
+        }
+
+        msg.setBody(newBody);
+        msg.setEdited(true);
+        messageRepository.save(msg);
+
+        MessageResponse response = toMessageResponse(msg);
+        messagingTemplate.convertAndSend("/topic/chat/" + conversationId, response);
+        return response;
+    }
+
+    @Transactional
+    public MessageResponse deleteMessage(UUID conversationId, UUID messageId, AuthPrincipal principal) {
+        if (principal == null) throw new IllegalArgumentException("Authentication required");
+        UUID userId = UUID.fromString(principal.userId());
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!currentUser.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
+
+        Message msg = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+
+        if (!msg.getConversationId().equals(conversationId)) {
+            throw new IllegalArgumentException("Message does not belong to this conversation");
+        }
+
+        if (!msg.getSenderId().equals(userId)) {
+            throw new IllegalArgumentException("Only the sender can delete this message");
+        }
+
+        msg.setBody("[Message deleted]");
+        msg.setDeleted(true);
+        messageRepository.save(msg);
+
+        MessageResponse response = toMessageResponse(msg);
+        messagingTemplate.convertAndSend("/topic/chat/" + conversationId, response);
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalUnreadCount(AuthPrincipal principal) {
+        if (principal == null) return 0L;
+        return messageRepository.countTotalUnreadMessages(UUID.fromString(principal.userId()));
     }
 
     private ConversationResponse toResponse(UUID conversationId, UUID currentUserId) {
@@ -220,10 +320,12 @@ public class ConversationService {
         }
 
         Conversation c = conversationRepository.findById(conversationId).orElse(null);
+        long unreadCount = messageRepository.countUnreadMessages(conversationId, currentUserId);
 
         return new ConversationResponse(
                 conversationId, otherUserId, otherUsername, otherDisplayName,
-                lastMessage, lastMessageAt, c != null ? c.getCreatedAt() : null
+                lastMessage, lastMessageAt, c != null ? c.getCreatedAt() : null,
+                unreadCount
         );
     }
 
@@ -235,7 +337,8 @@ public class ConversationService {
         }
         return new MessageResponse(
                 msg.getId(), msg.getConversationId(), msg.getSenderId(),
-                username, msg.getBody(), msg.getSentAt(), msg.getReadAt()
+                username, msg.getBody(), msg.getSentAt(), msg.getReadAt(),
+                msg.isDeleted(), msg.isEdited()
         );
     }
 

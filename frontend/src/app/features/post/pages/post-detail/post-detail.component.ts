@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PostService, PostResponse } from '../../../../core/post.service';
 import { AuthService } from '../../../../core/auth.service';
 import { timeAgo } from '../../../../core/time-ago';
@@ -12,11 +13,12 @@ import { PostActionsMenuComponent } from '../../components/post-actions-menu/pos
 import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.service';
 import { PostDetailSkeletonComponent } from '../../../../shared/components/post-detail-skeleton.component';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/post-interaction.util';
+import { ShareDmModalComponent } from '../../../../shared/components/share-dm-modal.component';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, CommentListComponent, SafePipe, PostActionsMenuComponent, PostDetailSkeletonComponent],
+  imports: [CommonModule, RouterLink, CommentListComponent, SafePipe, PostActionsMenuComponent, PostDetailSkeletonComponent, ShareDmModalComponent],
   template: `
     <div class="post-detail-page">
       <app-post-detail-skeleton *ngIf="loading"></app-post-detail-skeleton>
@@ -41,7 +43,8 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
              [routerLink]="['/c', post.communitySlug || post.communityId]"
              class="post-community">c/{{ post.communitySlug || post.communityName }}</a>
           <span class="separator">/</span>
-          <span class="post-time">{{ postLabel }}</span>
+          <span class="post-time" *ngIf="!post.isEdited">{{ postLabel }}</span>
+          <span class="edited-badge" *ngIf="post.isEdited">{{ postLabel }}</span>
           
           <div style="margin-left: auto;">
               <app-post-actions-menu
@@ -141,9 +144,15 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
 
       <div class="comments-divider" *ngIf="!loading && post"></div>
 
-      <div #commentsSection class="comments-section" *ngIf="postId">
-        <app-comment-list [postId]="postId" (totalCount)="commentCount = $event"></app-comment-list>
+      <div #commentsSection class="comments-section" *ngIf="postId && post">
+        <app-comment-list [postId]="postId" [postAuthorId]="post.authorId" (totalCount)="commentCount = $event"></app-comment-list>
       </div>
+      <app-share-dm-modal
+        *ngIf="sharingPost"
+        [postId]="sharingPost.id"
+        [postTitle]="sharingPost.title"
+        (close)="sharingPost = null"
+      ></app-share-dm-modal>
     </div>
   `,
   styles: [`
@@ -176,7 +185,32 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
     .context-separator { color: var(--text-muted); opacity: 0.5; }
     .context-tag { font-size: 0.8rem; padding: 0.1rem 0.5rem; border: 1px solid; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
 
-    .post-title { margin: 0 0 1rem; font-size: 2.8rem; font-weight: 800; color: var(--text-main); line-height: 1.1; letter-spacing: -0.03em; }
+    .post-title {
+      margin: 0 0 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      font-size: 2.2rem;
+
+      @media (max-width: 768px) {
+        font-size: 1.75rem;
+      }
+
+      @media (max-width: 480px) {
+        font-size: 1.4rem;
+      }
+    }
+    
+    .edited-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background-color: rgba(234, 179, 8, 0.15);
+      color: #b45309;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
     
     .flair { display: inline-flex; align-items: center; gap: 4px; border: none; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; text-transform: capitalize; letter-spacing: 0; background-color: var(--bg-elevated); color: var(--text-main); margin-bottom: 2rem; }
     .flair-icon { font-size: 0.8rem; line-height: 1; }
@@ -200,8 +234,13 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
     .post-content hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 
     .post-media { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem; }
-    .post-media-image { max-width: 100%; border: 1px solid var(--border-color); display: block; }
-    .post-media-video { max-width: 100%; border: 1px solid var(--border-color); }
+    .post-media img,
+    .post-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
     .post-media-iframe { width: 100%; height: 400px; border: 1px solid var(--border-color); }
     .post-media-link { color: var(--accent-color); font-size: 0.9rem; word-break: break-all; text-decoration: underline; font-weight: 500; }
 
@@ -269,7 +308,6 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
 
     @media (max-width: 768px) {
       .post-detail-page { padding: 1.25rem 0.75rem calc(3rem + 56px); }
-      .post-title { font-size: 1.25rem; }
       .post-content { font-size: 1rem; }
       .post-content h1 { font-size: 1.5rem; }
       .post-content h2 { font-size: 1.3rem; }
@@ -289,13 +327,14 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
         margin: 0 -0.75rem;
         padding: 0 0.75rem;
       }
-      .post-media .img-wrapper,
-      .post-media img,
-      .post-media video {
-        flex: 0 0 85%;
+      .post-media > .img-wrapper,
+      .post-media > img,
+      .post-media > video,
+      .post-media > iframe,
+      .post-media > a {
+        width: 85vw;
         scroll-snap-align: start;
-        max-height: 300px;
-        object-fit: cover;
+        flex-shrink: 0;
       }
 
       .action-bar {
@@ -316,15 +355,14 @@ import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/pos
         font-size: 0.8rem;
       }
     }
-    @media (min-width: 768px) and (max-width: 1023px) {
-      .post-title { font-size: 2.2rem; }
-    }
   `]
 })
 export class PostDetailComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   post: PostResponse | null = null;
   postId: string | null = null;
   loading = false;
+  sharingPost: PostResponse | null = null;
   error = '';
   loadedImages = new Set<string>();
 
@@ -335,6 +373,7 @@ export class PostDetailComponent implements OnInit {
   isImageLoaded(url: string): boolean {
     return this.loadedImages.has(url);
   }
+  isLoggedIn = false;
   commentCount = 0;
   isEdited = false;
   postLabel = '';
@@ -349,45 +388,69 @@ export class PostDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.postId = this.route.snapshot.paramMap.get('id');
-    if (this.postId) {
-      this.loadPost();
-    }
+    this.authService.currentUser$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(user => {
+        this.isLoggedIn = user !== null;
+      });
+
+    this.authService.checkAuth()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = params.get('id');
+        if (id) {
+          this.loadPost(id);
+        }
+      });
   }
 
-  loadPost(): void {
+  loadPost(id: string): void {
+    this.postId = id;
+    this.post = null;
+    this.error = '';
     this.loading = true;
-    this.postService.getPost(this.postId!).subscribe({
-      next: (post) => {
-        this.post = post;
-        this.loading = false;
-        this.isEdited = new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 1000;
-        const ts = this.isEdited ? post.updatedAt : post.createdAt;
-        const prefix = this.isEdited ? 'Edited ' : '';
-        this.postLabel = prefix + timeAgo(ts);
-        
-        this.post.upvoteCount = this.post.upvoteCount || 0;
-        this.post.downvoteCount = this.post.downvoteCount || 0;
-        this.post.userVote = this.post.userVote || 0;
-
-        this.authService.checkAuth().subscribe(() => {
-        });
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = err.status === 404 ? 'Post not found.' : 'Failed to load post.';
-      }
-    });
+    this.postService.getPost(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (post) => {
+          this.post = post;
+          this.loading = false;
+          this.isEdited = new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 1000;
+          const ts = this.isEdited ? post.updatedAt : post.createdAt;
+          const prefix = this.isEdited ? 'Edited ' : '';
+          this.postLabel = prefix + timeAgo(ts);
+          
+          this.post.upvoteCount = this.post.upvoteCount || 0;
+          this.post.downvoteCount = this.post.downvoteCount || 0;
+          this.post.userVote = this.post.userVote || 0;
+        },
+        error: (err) => {
+          this.loading = false;
+          this.error = err.status === 404 ? 'Post not found.' : 'Failed to load post.';
+        }
+      });
   }
 
 
 
   toggleVote(event: Event, post: PostResponse, direction: number): void {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
     if (!this.anonymousBrowsingService.interceptAction()) return;
     optimisticToggleVote(event, post, direction, this.postService);
   }
 
   toggleSave(event: Event): void {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
     if (!this.post) return;
     if (!this.anonymousBrowsingService.interceptAction()) return;
     optimisticToggleSave(event, this.post, this.postService);
@@ -397,18 +460,7 @@ export class PostDetailComponent implements OnInit {
     event.stopPropagation();
     event.preventDefault();
     if (!this.post) return;
-    
-    const url = `${window.location.origin}/posts/${this.post.id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: this.post.title || 'Community Post',
-        url: url
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        this.toastService.showSuccess('Link copied to clipboard');
-      });
-    }
+    this.sharingPost = this.post;
   }
 
   @ViewChild('commentsSection') commentsSectionRef!: ElementRef;

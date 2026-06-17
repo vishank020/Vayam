@@ -10,11 +10,12 @@ import { PostActionsMenuComponent } from '../../../post/components/post-actions-
 import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.service';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/post-interaction.util';
 import { PostSkeletonComponent } from '../../../../shared/components/post-skeleton.component';
+import { ShareDmModalComponent } from '../../../../shared/components/share-dm-modal.component';
 
 @Component({
   selector: 'app-feed-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, PostActionsMenuComponent, PostSkeletonComponent],
+  imports: [CommonModule, RouterLink, PostActionsMenuComponent, PostSkeletonComponent, ShareDmModalComponent],
   template: `
     <div class="feed-page">
 
@@ -29,7 +30,7 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
       </div>
 
       <div class="post-list" *ngIf="!loading && !feedError">
-        <div class="post-item" *ngFor="let post of posts" (click)="openPost(post)">
+        <div class="post-item" *ngFor="let post of posts" (click)="openPost($event, post)">
           
           <div class="post-meta">
             <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]" (click)="stopPropagation($event)" style="position: relative;">
@@ -63,6 +64,7 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
             <div style="margin-left: auto;" (click)="stopPropagation($event)">
               <app-post-actions-menu
                 [postId]="post.id"
+                [authorId]="post.authorId"
                 [authorUsername]="post.authorUsername"
                 (deleteRequested)="onPostDeleted(post)"
                 (hidden)="onPostHidden(post)">
@@ -143,6 +145,12 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
         <span class="page-info">{{ page + 1 }} / {{ totalPages }}</span>
         <button [disabled]="page >= totalPages - 1" (click)="goToPage(page + 1)">Next</button>
       </div>
+      <app-share-dm-modal
+        *ngIf="sharingPost"
+        [postId]="sharingPost.id"
+        [postTitle]="sharingPost.title"
+        (close)="sharingPost = null"
+      ></app-share-dm-modal>
     </div>
   `,
   styles: [`
@@ -373,6 +381,7 @@ export class FeedPageComponent implements OnInit {
   loading = false;
   feedError = false;
   loadedImages = new Set<string>();
+  sharingPost: FeedPostResponse | null = null;
 
   onImageLoaded(url: string): void {
     this.loadedImages.add(url);
@@ -476,7 +485,11 @@ export class FeedPageComponent implements OnInit {
     event.stopPropagation();
   }
 
-  openPost(post: FeedPostResponse): void {
+  openPost(event: Event, post: FeedPostResponse): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('a') || target.closest('button') || target.closest('app-post-actions-menu') || target.closest('.action-pill')) {
+      return;
+    }
     this.router.navigate(['/posts', post.id]);
   }
 
@@ -501,18 +514,7 @@ export class FeedPageComponent implements OnInit {
   sharePost(event: Event, post: FeedPostResponse): void {
     event.stopPropagation();
     event.preventDefault();
-    
-    const url = `${window.location.origin}/posts/${post.id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: post.title || 'Community Post',
-        url: url
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        this.toastService.showSuccess('Link copied to clipboard');
-      });
-    }
+    this.sharingPost = post;
   }
 }
 

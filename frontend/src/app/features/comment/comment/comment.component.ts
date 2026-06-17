@@ -32,9 +32,11 @@ import { AnonymousBrowsingService } from '../../../core/anonymous-browsing.servi
           <strong>{{ comment.authorDisplayName || comment.authorUsername }}</strong>
         </a>
         <strong *ngIf="comment.isAnonymous" class="comment-author-name">Anonymous</strong>
+        
+        <span *ngIf="comment.authorId && postAuthorId && comment.authorId === postAuthorId" class="author-tag">OP</span>
 
         <span class="comment-time"> • {{ commentTime }}</span>
-        <span *ngIf="comment.updatedAt !== comment.createdAt" style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Edited</span>
+        <span *ngIf="isCommentEdited()" style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Edited</span>
         
         <div style="margin-left: auto;">
           <app-comment-actions-menu
@@ -118,6 +120,7 @@ import { AnonymousBrowsingService } from '../../../core/anonymous-browsing.servi
           [depth]="1"
           [postId]="postId"
           [isLoggedIn]="isLoggedIn"
+          [postAuthorId]="postAuthorId"
           (commentDeleted)="onChildDeleted($event)"
           (replyAdded)="onChildReplyAdded($event)">
         </app-comment>
@@ -126,6 +129,19 @@ import { AnonymousBrowsingService } from '../../../core/anonymous-browsing.servi
   `,
   styles: [`
     .comment-item { }
+    .author-tag {
+      background: var(--primary);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      margin-left: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      line-height: 1.3;
+    }
     
     .comment-depth-0 {
       padding: 1.5rem 0;
@@ -233,6 +249,7 @@ export class CommentComponent implements OnDestroy {
   @Input() depth: number = 0;
   @Input() postId!: string;
   @Input() isLoggedIn: boolean = false;
+  @Input() postAuthorId?: string | null = null;
   
   @Output() commentDeleted = new EventEmitter<CommentResponse>();
   @Output() replyAdded = new EventEmitter<CommentResponse>();
@@ -288,6 +305,11 @@ export class CommentComponent implements OnDestroy {
 
   get commentTime(): string {
     return timeAgo(this.comment?.createdAt || '');
+  }
+
+  isCommentEdited(): boolean {
+    if (!this.comment || !this.comment.updatedAt || !this.comment.createdAt) return false;
+    return new Date(this.comment.updatedAt).getTime() - new Date(this.comment.createdAt).getTime() > 1000;
   }
 
   toggleReply(): void {

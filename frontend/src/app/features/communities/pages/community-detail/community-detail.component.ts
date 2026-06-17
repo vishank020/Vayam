@@ -108,7 +108,7 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
           <div *ngIf="!postsLoading && posts.length === 0" class="empty-section">No posts in this community yet.</div>
 
           <div class="post-list" *ngIf="!postsLoading">
-            <div class="post-item" *ngFor="let post of posts" (click)="openPost(post)">
+            <div class="post-item" *ngFor="let post of posts" (click)="openPost($event, post)">
 
               <div class="post-meta">
                 <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]" (click)="stopPropagation($event)" style="position: relative;">
@@ -137,6 +137,7 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
                 <div style="margin-left: auto;" (click)="stopPropagation($event)">
                   <app-post-actions-menu
                     [postId]="post.id"
+                    [authorId]="post.authorId"
                     [authorUsername]="post.authorUsername"
                     (deleteRequested)="onPostDeleted(post)"
                     (hidden)="onPostHidden(post)">
@@ -1355,7 +1356,11 @@ export class CommunityDetailComponent implements OnInit {
     event.stopPropagation();
   }
 
-  openPost(post: FeedPostResponse): void {
+  openPost(event: Event, post: FeedPostResponse): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('a') || target.closest('button') || target.closest('app-post-actions-menu') || target.closest('.action-pill')) {
+      return;
+    }
     this.router.navigate(['/posts', post.id]);
   }
 

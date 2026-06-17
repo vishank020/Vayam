@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { NotificationService } from './notification.service';
 import { AuthService } from './auth.service';
+import { DmService } from './dm.service';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +15,8 @@ export class WebSocketService {
 
   constructor(
     private notificationService: NotificationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private dmService: DmService
   ) {
     this.client = new Client({
       brokerURL: environment.wsUrl,
@@ -32,6 +34,9 @@ export class WebSocketService {
       this.client.subscribe('/user/queue/notifications', (msg: IMessage) => {
         const notification = JSON.parse(msg.body);
         this.notificationService.addUnread();
+      });
+      this.client.subscribe('/user/queue/messages', (msg: IMessage) => {
+        this.dmService.fetchUnreadCount();
       });
     };
 

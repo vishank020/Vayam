@@ -10,6 +10,7 @@ public record FeedPostResponse(
     String title,
     String content,
     PostType postType,
+    UUID authorId,
     String authorUsername,
     String authorDisplayName,
     String authorAvatarUrl,

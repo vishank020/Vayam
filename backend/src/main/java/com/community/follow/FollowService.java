@@ -44,6 +44,11 @@ public class FollowService {
         }
 
         UUID currentUserId = UUID.fromString(principal.userId());
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!currentUser.isEmailVerified()) {
+            throw new IllegalArgumentException("Email address is not verified. Please verify your email to perform this action.");
+        }
 
         if (blockService.isBlocked(targetUserId, currentUserId)) {
             throw new IllegalArgumentException("Cannot follow this user");

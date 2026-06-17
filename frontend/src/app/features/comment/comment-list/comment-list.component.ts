@@ -89,6 +89,7 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
           [depth]="0"
           [postId]="postId"
           [isLoggedIn]="isLoggedIn"
+          [postAuthorId]="postAuthorId"
           (commentDeleted)="onCommentDeleted($event)"
           (replyAdded)="onRootReplyAdded(c, $event)">
         </app-comment>
@@ -130,6 +131,7 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
 })
 export class CommentListComponent implements OnInit, OnDestroy {
   @Input() postId!: string;
+  @Input() postAuthorId?: string | null = null;
   @Output() totalCount = new EventEmitter<number>();
   comments: CommentResponse[] = [];
   

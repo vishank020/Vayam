@@ -10,5 +10,7 @@ public record MessageResponse(
     String senderUsername,
     String body,
     Instant sentAt,
-    Instant readAt
+    Instant readAt,
+    boolean isDeleted,
+    boolean isEdited
 ) {}

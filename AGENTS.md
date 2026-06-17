@@ -92,11 +92,11 @@ No tests exist yet (both `skipTests: true` and zero `.spec`/`Test.java` files). 
 | `ENCRYPTION_SECRET` | Yes | — | ≥32 bytes, auto-generated |
 | `MINIO_ROOT_PASSWORD` | Yes | — | Auto-generated |
 | `GIPHY_API_KEY` | No | empty | Degrades gracefully |
-| `MAIL_HOST` | Yes | smtp.sendgrid.net | SMTP server for email sending |
+| `MAIL_HOST` | Yes | smtp.gmail.com | SMTP server for email sending |
 | `MAIL_PORT` | Yes | 587 | SMTP port (TLS) |
-| `MAIL_USERNAME` | Yes | apikey | SendGrid uses "apikey" as username |
-| `MAIL_PASSWORD` | Yes | — | SendGrid API key or SMTP password |
-| `MAIL_FROM` | Yes | noreply@vayam.app | From address for outgoing emails |
+| `MAIL_USERNAME` | Yes | — | Your Gmail address (for Gmail SMTP) |
+| `MAIL_PASSWORD` | Yes | — | Gmail App Password (16 chars, no spaces) |
+| `MAIL_FROM` | Yes | — | From address (same as MAIL_USERNAME for Gmail) |
 
 ### Security Notes
 
@@ -271,10 +271,9 @@ Complete mobile-first responsive overhaul, shared vote/save logic, real-time DM 
 - **Fix 1 — Anonymous Browsing persist**: V48 migration, UserSettings.anonymousBrowsing, DTO field, settings toggle wired to PUT /api/settings with optimistic update + revert on error.
 - **Fix 2 — Account section (username/email)**: Backend UpdateUsernameRequest/UpdateEmailRequest DTOs, changeUsername()/changeEmail() in AuthService with current-password reauth + uniqueness checks, PUT /api/auth/username and PUT /api/auth/email endpoints. Frontend "Account" nav tab with forms following changePassword() pattern (validation, error display, success toast). Email applied immediately without verification (noted in code comment).
 - **OCI Production Deployment**: backend/Dockerfile, frontend/Dockerfile, frontend/nginx.conf, docker-compose.prod.yml, application-prod.yml, scripts/deploy-oci.sh, scripts/nginx-ssl.conf, scripts/db-backup.sh, .github/workflows/deploy.yml, COOKIE_SECURE env var support in AuthController, CORS_ALLOWED_ORIGIN env var in CorsConfig.
-- **Email Verification**: V49 migration adds `email`/`email_verified` columns + `email_verification_tokens` table. `EmailService` sends async verification/password-reset emails via SMTP (SendGrid-compatible). `AuthService.verifyEmail()` handles VERIFY_EMAIL + CHANGE_EMAIL tokens. `changeEmail()` creates verification token instead of immediate update. `forgotPassword()`/`resetPassword()` flow with 1hr expiry. Frontend `/verify-email`, `/forgot-password`, `/reset-password` pages. `spring.mail` env vars in docker-compose.prod.yml.
 - **Password visibility toggles (eye buttons)**: Custom SVGs added to all password inputs across login, register, reset password, and settings pages (both account & security settings).
 - **Strong password validations**: Configured `@Pattern` validation checks on backend DTOs (`RegisterRequest`, `ChangePasswordRequest`, `ResetPasswordRequest`) and template-driven/reactive validations on frontend components using standard strong regex pattern (`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._#\-]).{8,100}$`).
-- **SendGrid configuration & Render fallbacks**: Modified `application.yml` and `docker-compose.prod.yml` to support standard SendGrid environment variables (`SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`), defaulting to `byme2519@gmail.com` as the verified sender email. Added system log printing of all outgoing emails in `EmailService.java` for local debugging/testing.
+- **Email verification**: V49 migration adds `email`/`email_verified` columns + `email_verification_tokens` table. `EmailService` sends async verification/password-reset emails via SMTP (Gmail-compatible). `AuthService.verifyEmail()` handles VERIFY_EMAIL + CHANGE_EMAIL tokens. `changeEmail()` creates verification token instead of immediate update. `forgotPassword()`/`resetPassword()` flow with 1hr expiry. Frontend `/verify-email`, `/forgot-password`, `/reset-password` pages. `spring.mail` env vars in docker-compose.prod.yml.
 
 ### In Progress
 (none)

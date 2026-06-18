@@ -284,7 +284,7 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     .avatar-fallback { width: 140px; height: 140px; border-radius: 50%; background: var(--text-main); color: var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; border: 4px solid var(--bg-elevated); }
     
     .profile-actions { display: flex; gap: 0.5rem; align-items: center; }
-    button.btn-primary { background: var(--accent-color); color: #ffffff; border: 1px solid var(--accent-color); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
+    button.btn-primary { background: var(--accent-color) !important; color: #ffffff !important; border: 1px solid var(--accent-color) !important; padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
     button.btn-primary:hover { opacity: 0.8; }
     button.btn-primary.danger { background: var(--danger) !important; border-color: var(--danger); }
     

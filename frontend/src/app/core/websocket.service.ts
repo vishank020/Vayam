@@ -31,10 +31,6 @@ export class WebSocketService {
         this.connectResolver();
         this.connectResolver = null;
       }
-      this.client.subscribe('/user/queue/notifications', (msg: IMessage) => {
-        const notification = JSON.parse(msg.body);
-        this.notificationService.addUnread();
-      });
       this.client.subscribe('/user/queue/messages', (msg: IMessage) => {
         this.dmService.fetchUnreadCount();
       });
@@ -79,6 +75,20 @@ export class WebSocketService {
       let stompSub: any = null;
       this.ensureConnected().then(() => {
         stompSub = this.client.subscribe(`/topic/chat/${conversationId}`, (msg: IMessage) => {
+          observer.next(JSON.parse(msg.body));
+        });
+      });
+      return () => {
+        if (stompSub) stompSub.unsubscribe();
+      };
+    });
+  }
+
+  subscribeToNotifications(): Observable<any> {
+    return new Observable(observer => {
+      let stompSub: any = null;
+      this.ensureConnected().then(() => {
+        stompSub = this.client.subscribe('/user/queue/notifications', (msg: IMessage) => {
           observer.next(JSON.parse(msg.body));
         });
       });

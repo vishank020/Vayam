@@ -159,6 +159,15 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
     .notification-item.unread:hover {
       background: #e0e6ff;
     }
+    .notification-item.unread .item-message {
+      color: #0f172a;
+    }
+    .notification-item.unread .item-time {
+      color: #475569;
+    }
+    .notification-item.unread .item-type {
+      color: #1e3a8a;
+    }
     .notification-avatar {
       margin-right: 0.75rem;
       flex-shrink: 0;
@@ -248,7 +257,14 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.wsService.connect();
     this.notificationService.getUnreadCount().subscribe();
-    this.sub = this.notificationService.unreadCount$.subscribe(c => this.unreadCount = c);
+    this.sub.add(this.notificationService.unreadCount$.subscribe(c => this.unreadCount = c));
+
+    this.sub.add(this.wsService.subscribeToNotifications().subscribe({
+      next: (notification: NotificationResponse) => {
+        this.notifications = [notification, ...this.notifications];
+        this.notificationService.addUnread();
+      }
+    }));
   }
 
   ngOnDestroy(): void {

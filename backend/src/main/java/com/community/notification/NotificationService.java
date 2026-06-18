@@ -58,11 +58,17 @@ public class NotificationService {
 
         NotificationResponse response = toResponse(notification);
 
-        messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "/queue/notifications",
-                response
-        );
+        String recipientUsername = userRepository.findById(userId)
+                .map(User::getUsername)
+                .orElse(null);
+
+        if (recipientUsername != null) {
+            messagingTemplate.convertAndSendToUser(
+                    recipientUsername,
+                    "/queue/notifications",
+                    response
+            );
+        }
 
         return response;
     }

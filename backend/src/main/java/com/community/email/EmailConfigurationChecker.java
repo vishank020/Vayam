@@ -23,6 +23,10 @@ public class EmailConfigurationChecker implements CommandLineRunner {
     public void run(String... args) {
         log.info("Testing SMTP connection on startup...");
         if (mailSender instanceof JavaMailSenderImpl mailSenderImpl) {
+            int port = mailSenderImpl.getPort();
+            String host = mailSenderImpl.getHost();
+            log.info("Configured SMTP Host: {}, Port: {}, Security Mode: {}", 
+                     host, port, port == 465 ? "SSL/TLS" : "STARTTLS");
             try {
                 mailSenderImpl.testConnection();
                 log.info("SMTP connection tested successfully. Credentials are valid.");

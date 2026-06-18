@@ -2,45 +2,63 @@ package com.community.email;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;
 
-import jakarta.mail.MessagingException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @Component
 public class EmailConfigurationChecker implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(EmailConfigurationChecker.class);
-    private final JavaMailSender mailSender;
+    private static final String SENDGRID_SCOPES_URL = "https://api.sendgrid.com/v3/scopes";
 
-    public EmailConfigurationChecker(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    private final String apiKey;
+    private final HttpClient httpClient;
+
+    public EmailConfigurationChecker(@Value("${app.mail.api-key:}") String apiKey) {
+        this.apiKey = apiKey;
+        this.httpClient = HttpClient.newBuilder().build();
     }
 
     @Override
     public void run(String... args) {
-        log.info("Testing SMTP connection on startup...");
-        if (mailSender instanceof JavaMailSenderImpl mailSenderImpl) {
-            int port = mailSenderImpl.getPort();
-            String host = mailSenderImpl.getHost();
-            log.info("Configured SMTP Host: {}, Port: {}, Security Mode: {}", 
-                     host, port, port == 465 ? "SSL/TLS" : "STARTTLS");
-            try {
-                mailSenderImpl.testConnection();
-                log.info("SMTP connection tested successfully. Credentials are valid.");
-            } catch (MessagingException e) {
+        log.info("Testing SendGrid API connectivity on startup...");
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("SendGrid API Key is missing. Email sending will be disabled.");
+            return;
+        }
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(SENDGRID_SCOPES_URL))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                log.info("SendGrid API connection verified successfully. API Key is valid.");
+            } else {
                 log.error("\n======================================================================\n"
-                        + "  CRITICAL: SMTP Authentication Failed!\n"
+                        + "  CRITICAL: SendGrid API Authentication Failed!\n"
                         + "  The application will not be able to send verification or reset emails.\n"
-                        + "  Error: {}\n"
-                        + "======================================================================\n", e.getMessage(), e);
-            } catch (Exception e) {
-                log.warn("SMTP connectivity check encountered an error: {}", e.getMessage());
+                        + "  Status: {}, Error: {}\n"
+                        + "======================================================================\n", 
+                        response.statusCode(), response.body());
             }
-        } else {
-            log.warn("JavaMailSender is not an instance of JavaMailSenderImpl. Skipping startup SMTP auth check.");
+        } catch (Exception e) {
+            log.error("\n======================================================================\n"
+                    + "  CRITICAL: SendGrid API connectivity check failed!\n"
+                    + "  The application will not be able to send verification or reset emails.\n"
+                    + "  Error: {}\n"
+                    + "======================================================================\n", 
+                    e.getMessage(), e);
         }
     }
 }

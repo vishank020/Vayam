@@ -284,14 +284,18 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     .avatar-fallback { width: 140px; height: 140px; border-radius: 50%; background: var(--text-main); color: var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; border: 4px solid var(--bg-elevated); }
     
     .profile-actions { display: flex; gap: 0.5rem; align-items: center; }
-    .btn-primary { background: var(--text-main); color: var(--bg-main); border: 1px solid var(--text-main); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
-    .btn-primary:hover { opacity: 0.8; }
-    .btn-primary.danger { background: var(--danger); border-color: var(--danger); }
+    button.btn-primary { background: var(--text-main); color: var(--bg-main); border: 1px solid var(--text-main); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
+    button.btn-primary:hover { opacity: 0.8; }
+    button.btn-primary.danger { background: var(--danger); border-color: var(--danger); }
     
-    .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
-    .btn-secondary:hover { background: var(--bg-hover); }
-    .btn-secondary.unfollow { color: var(--danger); border-color: var(--danger); }
-    .btn-secondary.unfollow:hover { background: var(--danger); color: white; }
+    .btn-secondary,
+    button.btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-secondary:hover,
+    button.btn-secondary:hover { background: var(--bg-hover); }
+    .btn-secondary.unfollow,
+    button.btn-secondary.unfollow { color: var(--danger); border-color: var(--danger); }
+    .btn-secondary.unfollow:hover,
+    button.btn-secondary.unfollow:hover { background: var(--danger); color: white; }
     
     .btn-icon { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
     .btn-icon:hover { color: var(--text-main); background: var(--bg-hover); }

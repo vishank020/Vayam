@@ -29,10 +29,13 @@ public class MinioConfig {
         if (path != null && !path.isEmpty() && !"/".equals(path)) {
             try {
                 HttpUrl fullUrl = HttpUrl.parse(properties.endpoint());
-                Class<?> s3BaseClass = Class.forName("io.minio.S3Base");
-                Field baseUrlField = s3BaseClass.getDeclaredField("baseUrl");
+                Field asyncField = MinioClient.class.getDeclaredField("asyncClient");
+                asyncField.setAccessible(true);
+                Object asyncClient = asyncField.get(client);
+                Field baseUrlField = Class.forName("io.minio.S3Base")
+                        .getDeclaredField("baseUrl");
                 baseUrlField.setAccessible(true);
-                baseUrlField.set(client, fullUrl);
+                baseUrlField.set(asyncClient, fullUrl);
             } catch (Exception e) {
                 throw new RuntimeException(
                         "Failed to configure MinIO client for endpoint: " + properties.endpoint(), e);

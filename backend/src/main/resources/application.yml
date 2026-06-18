@@ -53,8 +53,6 @@ app:
     secure: ${COOKIE_SECURE:false}
   url: ${APP_URL:http://localhost:4200}
   mail:
-    api-key: ${SENDGRID_API_KEY:${MAIL_PASSWORD:}}
-    from: ${SENDGRID_FROM_EMAIL:${MAIL_FROM:byme2519@gmail.com}}
     verification-token-expiry-hours: 24
     password-reset-token-expiry-hours: 1
 
@@ -64,3 +62,7 @@ cors:
 giphy:
   api:
     key: ${GIPHY_API_KEY:}
+
+brevo:
+  api-key: ${BREVO_API_KEY}
+  from-email: ${BREVO_FROM_EMAIL}

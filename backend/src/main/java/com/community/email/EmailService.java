@@ -17,19 +17,17 @@ import java.util.concurrent.CompletableFuture;
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
-    private static final String SENDGRID_API_URL = "https://api.sendgrid.com/v3/mail/send";
-
     private final HttpClient httpClient;
-    private final String apiKey;
-    private final String fromAddress;
     private final String appUrl;
 
-    public EmailService(@Value("${app.mail.api-key:}") String apiKey,
-                        @Value("${app.mail.from:byme2519@gmail.com}") String fromAddress,
-                        @Value("${app.url}") String appUrl) {
+    @Value("${brevo.api-key}")
+    private String apiKey;
+
+    @Value("${brevo.from-email}")
+    private String fromEmail;
+
+    public EmailService(@Value("${app.url}") String appUrl) {
         this.httpClient = HttpClient.newBuilder().build();
-        this.apiKey = apiKey;
-        this.fromAddress = fromAddress;
         this.appUrl = appUrl;
     }
 
@@ -89,24 +87,24 @@ public class EmailService {
 
     private boolean send(String to, String subject, String body) {
         // ALWAYS log the email details to console/logs so it's easy to test and find links
-        System.out.println("\n=== [VAYAM EMAIL SENT via SENDGRID API] ===");
+        System.out.println("\n=== [VAYAM EMAIL SENT via BREVO API] ===");
         System.out.println("To: " + to);
         System.out.println("Subject: " + subject);
         System.out.println("Body:\n" + body);
         System.out.println("============================================\n");
 
         if (apiKey == null || apiKey.isBlank()) {
-            log.error("SendGrid API Key is missing. Email cannot be sent.");
+            log.error("Brevo API Key is missing. Email cannot be sent.");
             return false;
         }
 
         try {
             // Escape body content for JSON compatibility
-            String jsonBody = createSendGridJson(to, fromAddress, subject, body);
+            String jsonBody = createBrevoJson(to, fromEmail, subject, body);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(SENDGRID_API_URL))
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("api-key", apiKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
                     .build();
@@ -114,20 +112,20 @@ public class EmailService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                log.info("Email sent successfully to {} via SendGrid API (Status: {})", to, response.statusCode());
+                log.info("Email sent successfully to {} via Brevo API (Status: {})", to, response.statusCode());
                 return true;
             } else {
-                log.error("Failed to send email to {} via SendGrid API. Status: {}, Body: {}", 
+                log.error("Failed to send email to {} via Brevo API. Status: {}, Body: {}", 
                         to, response.statusCode(), response.body());
                 return false;
             }
         } catch (Exception e) {
-            log.error("Failed to send email to " + to + " via SendGrid API", e);
+            log.error("Failed to send email to " + to + " via Brevo API", e);
             return false;
         }
     }
 
-    private String createSendGridJson(String to, String from, String subject, String textContent) {
+    private String createBrevoJson(String to, String from, String subject, String textContent) {
         // Simple manual JSON escape helper for special characters
         String escapedText = textContent
                 .replace("\\", "\\\\")
@@ -142,26 +140,17 @@ public class EmailService {
 
         return """
                 {
-                  "personalizations": [
-                    {
-                      "to": [
-                        {
-                          "email": "%s"
-                        }
-                      ]
-                    }
-                  ],
-                  "from": {
+                  "sender": {
                     "email": "%s"
                   },
-                  "subject": "%s",
-                  "content": [
+                  "to": [
                     {
-                      "type": "text/plain",
-                      "value": "%s"
+                      "email": "%s"
                     }
-                  ]
+                  ],
+                  "subject": "%s",
+                  "textContent": "%s"
                 }
-                """.formatted(to, from, escapedSubject, escapedText);
+                """.formatted(from, to, escapedSubject, escapedText);
     }
 }

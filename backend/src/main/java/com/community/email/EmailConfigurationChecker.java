@@ -15,38 +15,38 @@ import java.net.http.HttpResponse;
 public class EmailConfigurationChecker implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(EmailConfigurationChecker.class);
-    private static final String SENDGRID_SCOPES_URL = "https://api.sendgrid.com/v3/scopes";
+    private static final String BREVO_ACCOUNT_URL = "https://api.brevo.com/v3/account";
 
     private final String apiKey;
     private final HttpClient httpClient;
 
-    public EmailConfigurationChecker(@Value("${app.mail.api-key:}") String apiKey) {
+    public EmailConfigurationChecker(@Value("${brevo.api-key}") String apiKey) {
         this.apiKey = apiKey;
         this.httpClient = HttpClient.newBuilder().build();
     }
 
     @Override
     public void run(String... args) {
-        log.info("Testing SendGrid API connectivity on startup...");
+        log.info("Testing Brevo API connectivity on startup...");
         if (apiKey == null || apiKey.isBlank()) {
-            log.warn("SendGrid API Key is missing. Email sending will be disabled.");
+            log.warn("Brevo API Key is missing. Email sending will be disabled.");
             return;
         }
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(SENDGRID_SCOPES_URL))
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri(URI.create(BREVO_ACCOUNT_URL))
+                    .header("api-key", apiKey)
                     .GET()
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                log.info("SendGrid API connection verified successfully. API Key is valid.");
+                log.info("Brevo API connection verified successfully. API Key is valid.");
             } else {
                 log.error("\n======================================================================\n"
-                        + "  CRITICAL: SendGrid API Authentication Failed!\n"
+                        + "  CRITICAL: Brevo API Authentication Failed!\n"
                         + "  The application will not be able to send verification or reset emails.\n"
                         + "  Status: {}, Error: {}\n"
                         + "======================================================================\n", 
@@ -54,7 +54,7 @@ public class EmailConfigurationChecker implements CommandLineRunner {
             }
         } catch (Exception e) {
             log.error("\n======================================================================\n"
-                    + "  CRITICAL: SendGrid API connectivity check failed!\n"
+                    + "  CRITICAL: Brevo API connectivity check failed!\n"
                     + "  The application will not be able to send verification or reset emails.\n"
                     + "  Error: {}\n"
                     + "======================================================================\n", 

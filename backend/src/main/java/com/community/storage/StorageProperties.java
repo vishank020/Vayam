@@ -10,7 +10,4 @@ public record StorageProperties(
     String bucketName,
     String region
 ) {
-    public StorageProperties() {
-        this("http://localhost:9000", "minioadmin", "minioadmin", "community", "us-east-1");
-    }
 }

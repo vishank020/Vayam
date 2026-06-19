@@ -852,7 +852,8 @@ import { PostSkeletonComponent } from '../../../../shared/components/post-skelet
     .flair--achievement { background-color: #fef08a; color: #854d0e; }
     .flair--project { background-color: #e0e7ff; color: #3730a3; }
     .flair--general { background-color: #e2e8f0; color: #475569; }
-    .avatar-img, .avatar-initials { height: 40px; width: 40px; border-radius: 50%; object-fit: cover; }
+    .post-meta .avatar { width: 40px; height: 40px; }
+    .post-meta .avatar-img, .post-meta .avatar-initials { border-radius: 50%; object-fit: cover; }
     .avatar-initials { background: var(--text-main); color: var(--bg-main); display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; }
     .avatar-anon { background: var(--border-color); color: var(--text-muted); }
     .title { color: var(--text-main); display: block; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; text-decoration: none; line-height: 1.2; }

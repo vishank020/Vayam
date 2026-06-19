@@ -347,7 +347,8 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     .post-item:hover { border-color: var(--text-muted); }
     .post-meta { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
     .avatar { display: inline-flex; flex-shrink: 0; }
-    .avatar-img, .avatar-initials { height: 36px; width: 36px; border-radius: 50%; object-fit: cover; }
+    .post-meta .avatar { width: 36px; height: 36px; }
+    .avatar-img, .avatar-initials { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .avatar-initials { background: var(--text-main); color: var(--bg-main); display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; }
     .avatar-anon { background: var(--border-color); color: var(--text-muted); }
     .meta-text { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; }

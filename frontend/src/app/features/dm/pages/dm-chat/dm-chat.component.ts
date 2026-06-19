@@ -6,6 +6,7 @@ import { Subscription, fromEvent } from 'rxjs';
 import { DmService, MessageResponse } from '../../../../core/dm.service';
 import { AuthService } from '../../../../core/auth.service';
 import { WebSocketService } from '../../../../core/websocket.service';
+import { SeoService } from '../../../../core/seo.service';
 
 @Component({
   selector: 'app-dm-chat',
@@ -295,7 +296,8 @@ export class DmChatComponent implements OnInit, OnDestroy {
     private dmService: DmService,
     private authService: AuthService,
     private wsService: WebSocketService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -366,6 +368,11 @@ export class DmChatComponent implements OnInit, OnDestroy {
         this.messages = [...res.content].reverse();
         this.loading = false;
         setTimeout(() => this.scrollToBottom());
+        const other = this.messages.find(m => m.senderId !== this.currentUserId);
+        this.seoService.updateMeta(
+          `Chat with ${other?.senderUsername || 'User'} | Vayam`,
+          'Direct message conversation on Vayam.'
+        );
       },
       error: () => this.loading = false
     });

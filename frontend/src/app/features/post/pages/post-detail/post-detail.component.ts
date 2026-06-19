@@ -14,6 +14,7 @@ import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.se
 import { PostDetailSkeletonComponent } from '../../../../shared/components/post-detail-skeleton.component';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/post-interaction.util';
 import { ShareDmModalComponent } from '../../../../shared/components/share-dm-modal.component';
+import { SeoService } from '../../../../core/seo.service';
 
 @Component({
   selector: 'app-post-detail',
@@ -384,7 +385,8 @@ export class PostDetailComponent implements OnInit {
     private postService: PostService,
     private authService: AuthService,
     private toastService: ToastService,
-    private anonymousBrowsingService: AnonymousBrowsingService
+    private anonymousBrowsingService: AnonymousBrowsingService,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -427,6 +429,9 @@ export class PostDetailComponent implements OnInit {
           this.post.upvoteCount = this.post.upvoteCount || 0;
           this.post.downvoteCount = this.post.downvoteCount || 0;
           this.post.userVote = this.post.userVote || 0;
+
+          const desc = post.content.length > 150 ? post.content.substring(0, 150).trim() + '...' : post.content;
+          this.seoService.updateMeta(`${post.title} | Vayam`, desc);
         },
         error: (err) => {
           this.loading = false;

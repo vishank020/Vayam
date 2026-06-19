@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
+import { RouterOutlet, NavigationEnd, Router, ActivatedRoute } from '@angular/router';
 import { AppHeaderComponent } from './app-header/app-header.component';
 import { AppSidebarComponent } from './app-sidebar/app-sidebar.component';
 import { ToastContainerComponent } from './shared/toast-container/toast-container.component';
@@ -10,6 +10,7 @@ import { AuthService } from './core/auth.service';
 import { SettingsService } from './core/settings.service';
 import { SidebarService } from './core/sidebar.service';
 import { ThemeService } from './core/theme.service';
+import { SeoService } from './core/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -89,6 +90,8 @@ export class AppComponent implements OnInit {
     private settingsService: SettingsService,
     private sidebarService: SidebarService,
     private router: Router,
+    private route: ActivatedRoute,
+    private seoService: SeoService,
     private themeService: ThemeService
   ) {
     this.sidebarService.open$.subscribe(open => {
@@ -97,12 +100,24 @@ export class AppComponent implements OnInit {
     this.router.events.subscribe(e => {
       if (e instanceof NavigationEnd) {
         this.closeSidebar();
+        this.updateSeoFromRoute();
       }
     });
   }
 
   closeSidebar(): void {
     this.sidebarOpen = false;
+  }
+
+  private updateSeoFromRoute(): void {
+    let activated = this.route;
+    while (activated.firstChild) {
+      activated = activated.firstChild;
+    }
+    const data = activated.snapshot.data;
+    if (data['title'] && data['description']) {
+      this.seoService.updateMeta(data['title'], data['description']);
+    }
   }
 
   onMainClick(): void {

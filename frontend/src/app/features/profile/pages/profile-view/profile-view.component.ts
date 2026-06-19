@@ -14,6 +14,7 @@ import { timeAgo } from '../../../../core/time-ago';
 import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.service';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/post-interaction.util';
 import { DmService } from '../../../../core/dm.service';
+import { SeoService } from '../../../../core/seo.service';
 import { ProfileSkeletonComponent } from '../../../../shared/components/profile-skeleton.component';
 import { PostSkeletonComponent } from '../../../../shared/components/post-skeleton.component';
 import { ShareDmModalComponent } from '../../../../shared/components/share-dm-modal.component';
@@ -527,7 +528,8 @@ export class ProfileViewComponent implements OnInit {
     private commentService: CommentService,
     private toastService: ToastService,
     private anonymousBrowsingService: AnonymousBrowsingService,
-    private dmService: DmService
+    private dmService: DmService,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -550,6 +552,10 @@ export class ProfileViewComponent implements OnInit {
           this.profile = profile;
           this.isOwnProfile = this.currentUser?.id === profile.id;
           this.loadTabData();
+          this.seoService.updateMeta(
+            `${profile.displayName || profile.username} | Vayam`,
+            profile.bio || `View ${profile.displayName || profile.username}'s profile on Vayam.`
+          );
         },
         error: () => {
           this.error = 'User not found';

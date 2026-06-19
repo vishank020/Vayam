@@ -14,6 +14,7 @@ import { PostActionsMenuComponent } from '../../../post/components/post-actions-
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { environment } from '../../../../../environments/environment';
 import { optimisticToggleVote, optimisticToggleSave } from '../../../../core/post-interaction.util';
+import { SeoService } from '../../../../core/seo.service';
 import { CommunitySkeletonComponent } from '../../../../shared/components/community-skeleton.component';
 import { PostSkeletonComponent } from '../../../../shared/components/post-skeleton.component';
 
@@ -968,7 +969,8 @@ export class CommunityDetailComponent implements OnInit {
     private postService: PostService,
     private toastService: ToastService,
     private anonymousBrowsingService: AnonymousBrowsingService,
-    private http: HttpClient
+    private http: HttpClient,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -1124,6 +1126,12 @@ export class CommunityDetailComponent implements OnInit {
   }
 
   onCommunityLoaded(): void {
+    if (this.community) {
+      this.seoService.updateMeta(
+        `${this.community.name} | Vayam`,
+        this.community.description || `Join ${this.community.name} on Vayam.`
+      );
+    }
     this.loadMembers();
     this.loadRules();
     this.loadJoinRequests();

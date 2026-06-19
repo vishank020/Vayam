@@ -6,6 +6,7 @@ import { PostService, PostResponse, CreatePostRequest } from '../../../../core/p
 import { CommunityService, CommunityResponse } from '../../../../core/community.service';
 import { MarkdownEditorComponent } from '../../../shared/markdown-editor/markdown-editor.component';
 import { PostDetailSkeletonComponent } from '../../../../shared/components/post-detail-skeleton.component';
+import { SeoService } from '../../../../core/seo.service';
 
 @Component({
   selector: 'app-edit-post',
@@ -175,7 +176,8 @@ export class EditPostComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private postService: PostService
+    private postService: PostService,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -195,6 +197,7 @@ export class EditPostComponent implements OnInit {
         this.request.communityId = post.communityId;
         this.request.isAnonymous = post.isAnonymous;
         this.loading = false;
+        this.seoService.updateMeta(`Edit: ${post.title} | Vayam`, `Editing post "${post.title}" on Vayam.`);
       },
       error: () => {
         this.loading = false;

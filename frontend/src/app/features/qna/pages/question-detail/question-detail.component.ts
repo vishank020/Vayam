@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { marked } from 'marked';
 import { QnaService, QuestionResponse, AnswerResponse } from '../../../../core/qna.service';
 import { AnonymousBrowsingService } from '../../../../core/anonymous-browsing.service';
+import { SeoService } from '../../../../core/seo.service';
 import { PostDetailSkeletonComponent } from '../../../../shared/components/post-detail-skeleton.component';
 import { timeAgo } from '../../../../core/time-ago';
 
@@ -212,7 +213,8 @@ export class QuestionDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private qnaService: QnaService,
-    private anonymousBrowsingService: AnonymousBrowsingService
+    private anonymousBrowsingService: AnonymousBrowsingService,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -225,7 +227,12 @@ export class QuestionDetailComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.qnaService.getQuestion(this.questionId).subscribe({
-      next: (q) => { this.question = q; this.loading = false; },
+      next: (q) => {
+        this.question = q;
+        this.loading = false;
+        const desc = q.body.length > 150 ? q.body.substring(0, 150).trim() + '...' : q.body;
+        this.seoService.updateMeta(`${q.title} | Vayam`, desc);
+      },
       error: () => { this.error = 'Failed to load question.'; this.loading = false; }
     });
   }

@@ -8,7 +8,7 @@
   --bg-elevated: #222426;
   --bg-hover: #2A2D2F;
   --text-main: #E4E4E4;
-  --text-muted: #A3ACB8;
+  --text-muted: #BCC5D0;
   --accent-color: #818CF8;
   --accent-hover: #6366F1;
   --danger: #F87171;
@@ -92,6 +92,9 @@ body {
 
 a { color: var(--accent-color); text-decoration: none; transition: opacity 0.1s; }
 a:hover { opacity: 0.8; }
+
+.body-preview a, .post-content a, .comment-body a { color: #A5B4FC; }
+.body-preview a:hover, .post-content a:hover, .comment-body a:hover { color: #C7D2FE; }
 
 /* Global Flat UI Defaults - Sharp edges, no gradients, no shadows */
 button {

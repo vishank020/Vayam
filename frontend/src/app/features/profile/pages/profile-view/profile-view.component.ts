@@ -277,7 +277,7 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
     .cover-image { width: 100%; height: 100%; object-fit: cover; }
     .cover-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, var(--border-color) 0%, var(--bg-hover) 100%); }
     
-    .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 2rem; margin-top: -70px; margin-bottom: 1.5rem; }
+    .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 2rem; margin-top: -70px; margin-bottom: 1.5rem; position: relative; z-index: 1; }
     
     .avatar-container { position: relative; width: 140px; height: 140px; }
     .avatar-image { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg-elevated); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }

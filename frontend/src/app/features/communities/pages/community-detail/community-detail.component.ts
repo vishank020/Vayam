@@ -1160,6 +1160,7 @@ export class CommunityDetailComponent implements OnInit {
   }
 
   loadJoinRequests(): void {
+    if (!this.canManage()) return;
     this.communityService.getJoinRequests(this.communityId).subscribe({
       next: (requests) => this.joinRequests = requests
     });
@@ -1172,6 +1173,7 @@ export class CommunityDetailComponent implements OnInit {
   }
 
   loadInviteLinks(): void {
+    if (!this.canInvite()) return;
     this.communityService.getInviteLinks(this.communityId).subscribe({
       next: (links) => this.inviteLinks = links
     });

@@ -12,7 +12,7 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
   imports: [CommonModule, RouterLink, CommentSkeletonComponent],
   template: `
     <div class="notification-wrapper">
-      <button class="bell-button" (click)="toggleDropdown()">
+      <button class="bell-button" (click)="toggleDropdown()" [attr.aria-label]="'Notifications' + (unreadCount > 0 ? ', ' + unreadCount + ' unread' : '')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -78,7 +78,7 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
       align-items: center;
     }
     .bell-button:hover {
-      background: #f0f0f0;
+      background: var(--bg-hover);
     }
     .badge {
       position: absolute;
@@ -151,23 +151,23 @@ import { CommentSkeletonComponent } from '../../../shared/components/comment-ske
       align-items: center;
     }
     .notification-item:hover {
-      background: #f9f9f9;
+      background: var(--bg-hover);
     }
     .notification-item.unread {
-      background: #eef2ff;
-      color: var(--text-main) !important;
+      background: var(--bg-elevated);
+      color: var(--text-main);
     }
     .notification-item.unread:hover {
-      background: #e0e6ff;
+      background: var(--bg-hover);
     }
     .notification-item.unread .item-message {
-      color: #0f172a !important;
+      color: var(--text-main);
     }
     .notification-item.unread .item-time {
-      color: #475569 !important;
+      color: var(--text-muted);
     }
     .notification-item.unread .item-type {
-      color: #1e3a8a !important;
+      color: var(--accent-color);
     }
     .notification-avatar {
       margin-right: 0.75rem;

@@ -26,9 +26,9 @@ import { ShareDmModalComponent } from '../../../../shared/components/share-dm-mo
 
       <div class="post-article" *ngIf="!loading && post">
         <div class="post-meta">
-          <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]" style="position: relative;">
+          <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]" style="position: relative;" [attr.aria-label]="'View profile of ' + post.authorUsername">
             <div class="skeleton skeleton-overlay" *ngIf="post.authorAvatarUrl && !isImageLoaded(post.authorAvatarUrl)" style="border-radius: 50;"></div>
-            <img *ngIf="post.authorAvatarUrl" [src]="post.authorAvatarUrl" (load)="onImageLoaded(post.authorAvatarUrl)" alt="" class="avatar-img">
+            <img *ngIf="post.authorAvatarUrl" [src]="post.authorAvatarUrl" (load)="onImageLoaded(post.authorAvatarUrl)" [attr.alt]="post.authorUsername + ' avatar'" class="avatar-img">
             <span *ngIf="!post.authorAvatarUrl" class="avatar-initials">{{ (post.authorDisplayName || '?')[0] | uppercase }}</span>
           </a>
           <span class="avatar" *ngIf="post.isAnonymous">

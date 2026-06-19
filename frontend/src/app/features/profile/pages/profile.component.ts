@@ -160,8 +160,8 @@ import { ShareDmModalComponent } from '../../../shared/components/share-dm-modal
             <div *ngIf="!loadingTab && activeTab !== 'comments'" class="feed-posts">
               <div class="post-item" *ngFor="let post of tabPosts">
                 <div class="post-meta">
-                  <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]">
-                    <img *ngIf="post.authorAvatarUrl" [src]="post.authorAvatarUrl" alt="" class="avatar-img">
+                  <a class="avatar" *ngIf="!post.isAnonymous" [routerLink]="['/u', post.authorUsername]" [attr.aria-label]="'View profile of ' + post.authorUsername">
+                    <img *ngIf="post.authorAvatarUrl" [src]="post.authorAvatarUrl" [attr.alt]="post.authorUsername + ' avatar'" class="avatar-img">
                     <span *ngIf="!post.authorAvatarUrl" class="avatar-initials">{{ (post.authorDisplayName || '?')[0] }}</span>
                   </a>
                   <span class="avatar" *ngIf="post.isAnonymous">

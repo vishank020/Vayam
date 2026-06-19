@@ -1148,6 +1148,7 @@ export class CommunityDetailComponent implements OnInit {
   }
 
   loadInvites(): void {
+    if (!this.canManage()) return;
     this.communityService.getInvites(this.communityId).subscribe({
       next: (invites) => this.invites = invites
     });

@@ -228,7 +228,7 @@ import { WebSocketService } from '../../../../core/websocket.service';
       margin-top: 0.2rem;
       text-align: right;
     }
-    .read-indicator { color: var(--accent-color); opacity: 1; }
+    .read-indicator { color: white; opacity: 1; }
     .message-form {
       display: flex;
       gap: 0.5rem;
